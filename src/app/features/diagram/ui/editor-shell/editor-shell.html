@@ -2,8 +2,15 @@
 	<app-left-sidebar></app-left-sidebar>
 
 	<section class="flex min-h-[60dvh] flex-col gap-3" aria-label="Diagram workspace">
-		<app-canvas-toolbar></app-canvas-toolbar>
-		<app-diagram-canvas></app-diagram-canvas>
+		<app-canvas-toolbar
+			[hasGraph]="diagramStore.hasActiveGraph()"
+			[busy]="diagramStore.loading() || diagramStore.mutating()"
+			[statusText]="toolbarStatusText()"
+			(fitRequested)="requestViewportAction('fit')"
+			(zoomInRequested)="requestViewportAction('zoom-in')"
+			(zoomOutRequested)="requestViewportAction('zoom-out')"
+		></app-canvas-toolbar>
+		<app-diagram-canvas [viewportAction]="viewportRequest()"></app-diagram-canvas>
 	</section>
 
 	<app-right-sidebar></app-right-sidebar>

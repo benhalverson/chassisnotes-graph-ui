@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   Injector,
   inject,
   input,
@@ -12,13 +13,23 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import {
+  type Edge,
+  type EdgeDrawnEvent,
   type ModelAdapter,
+  NgDiagramBaseEdgeComponent,
+  NgDiagramBaseEdgeLabelComponent,
   NgDiagramBaseNodeTemplateComponent,
   NgDiagramComponent,
+  type NgDiagramConfig,
+  type NgDiagramEdgeTemplate,
+  NgDiagramEdgeTemplateMap,
   type NgDiagramNodeTemplate,
   NgDiagramNodeTemplateMap,
+  NgDiagramPortComponent,
+  NgDiagramViewportService,
   type NodeDragEndedEvent,
   type NodeDragStartedEvent,
+  type Port,
   provideNgDiagram,
   type SelectionGestureEndedEvent,
   type SimpleNode,
@@ -26,10 +37,17 @@ import {
 import { combineLatest } from 'rxjs';
 import type {
   ConfidenceLevel,
+  EvidenceType,
   GraphNodeType,
   GraphPhaseTag,
 } from '../../../../core/models/graph.models';
-import { buildDiagramModel, DiagramStore } from '../../state/diagram-store';
+import { RelationshipRules } from '../../data-access/relationship-rules';
+import {
+  buildDiagramModel,
+  DiagramStore,
+  syncDiagramModel,
+} from '../../state/diagram-store';
+import type { CanvasViewportRequest } from '../canvas-toolbar/canvas-toolbar';
 
 type DiagramNodeData = {
   type: GraphNodeType;
@@ -39,10 +57,21 @@ type DiagramNodeData = {
   description: string;
   phaseTags: GraphPhaseTag[];
   confidence: ConfidenceLevel;
+  isDimmed: boolean;
+  isHighlighted: boolean;
+};
+
+type DiagramEdgeData = {
+  label: string;
+  relationshipType: string;
+  evidenceType?: EvidenceType;
+  confidence: ConfidenceLevel;
+  isDimmed: boolean;
+  isHighlighted: boolean;
 };
 
 @Component({
-  imports: [NgDiagramBaseNodeTemplateComponent],
+  imports: [NgDiagramBaseNodeTemplateComponent, NgDiagramPortComponent],
   template: `
     <ng-diagram-base-node-template
       [node]="node()"
@@ -51,6 +80,9 @@ type DiagramNodeData = {
       [style.--ngd-selected-node-box-shadow]="selectedNodeShadow()"
     >
       <article [class]="contentClasses()" [attr.aria-label]="node().data.label">
+        <ng-diagram-port id="port-left" type="target" side="left" />
+        <ng-diagram-port id="port-right" type="source" side="right" />
+
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <p [class]="categoryClasses()">{{ node().data.category }}</p>
@@ -88,7 +120,11 @@ class GraphNodeTemplate implements NgDiagramNodeTemplate<DiagramNodeData> {
 
   protected readonly contentClasses = computed(() => {
     return [
-      'relative block min-w-[14rem] max-w-[16rem] px-3 py-3 text-slate-100',
+      'relative block min-w-[14rem] max-w-[16rem] rounded-xl px-3 py-3 text-slate-100 transition-opacity',
+      this.node().data.isDimmed ? 'opacity-45' : 'opacity-100',
+      this.node().data.isHighlighted
+        ? 'ring-1 ring-cyan-400/40'
+        : 'ring-1 ring-transparent',
     ].join(' ');
   });
 
@@ -142,6 +178,69 @@ class GraphNodeTemplate implements NgDiagramNodeTemplate<DiagramNodeData> {
 }
 
 @Component({
+  imports: [NgDiagramBaseEdgeComponent, NgDiagramBaseEdgeLabelComponent],
+  template: `
+    <ng-diagram-base-edge
+      [edge]="edge()"
+      [stroke]="stroke()"
+      [strokeWidth]="strokeWidth()"
+      [strokeOpacity]="strokeOpacity()"
+      [strokeDasharray]="strokeDasharray()"
+    >
+      <ng-diagram-base-edge-label [id]="labelId()" [positionOnEdge]="0.5">
+        <span [class]="labelClasses()">{{ edge().data.label }}</span>
+      </ng-diagram-base-edge-label>
+    </ng-diagram-base-edge>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class GraphEdgeTemplate implements NgDiagramEdgeTemplate<DiagramEdgeData> {
+  readonly edge = input.required<Edge<DiagramEdgeData>>();
+
+  protected readonly labelId = computed(() => `${this.edge().id}-label`);
+
+  protected readonly stroke = computed(() => {
+    switch (this.edge().data.relationshipType) {
+      case 'can increase':
+        return 'rgb(251 113 133)';
+      case 'can reduce':
+        return 'rgb(52 211 153)';
+      case 'tradeoff':
+        return 'rgb(251 191 36)';
+      case 'tested':
+        return 'rgb(56 189 248)';
+      case 'observed':
+        return 'rgb(196 181 253)';
+      default:
+        return 'rgb(148 163 184)';
+    }
+  });
+
+  protected readonly strokeWidth = computed(() =>
+    this.edge().selected || this.edge().data.isHighlighted ? 2.75 : 2,
+  );
+
+  protected readonly strokeOpacity = computed(() =>
+    this.edge().data.isDimmed
+      ? 0.28
+      : this.edge().data.isHighlighted
+        ? 1
+        : 0.72,
+  );
+
+  protected readonly strokeDasharray = computed(() =>
+    this.edge().data.relationshipType === 'tested' ? '6 4' : '',
+  );
+
+  protected readonly labelClasses = computed(() => {
+    return [
+      'rounded-full border border-slate-700 bg-slate-950/95 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-200 shadow-sm transition-opacity',
+      this.edge().data.isDimmed ? 'opacity-45' : 'opacity-100',
+    ].join(' ');
+  });
+}
+
+@Component({
   selector: 'app-diagram-canvas',
   imports: [NgDiagramComponent],
   providers: [provideNgDiagram()],
@@ -152,13 +251,19 @@ class GraphNodeTemplate implements NgDiagramNodeTemplate<DiagramNodeData> {
 export class DiagramCanvas implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly injector = inject(Injector);
+  private readonly relationshipRules = inject(RelationshipRules);
+  private readonly viewportService = inject(NgDiagramViewportService);
   protected readonly diagramStore = inject(DiagramStore);
+  readonly viewportAction = input<CanvasViewportRequest | null>(null);
   private activeGraphId: string | null = null;
   private dragInProgress = false;
   private skipNextModelRefresh = false;
+  private lastHandledViewportActionId = 0;
   private lastGraphRef: object | null = null;
   private lastNodesRef: readonly unknown[] | null = null;
   private lastEdgesRef: readonly unknown[] | null = null;
+  private lastSelectionKey = '';
+  private lastFilterKey = '';
 
   protected readonly isBrowser = isPlatformBrowser(this.platformId);
   protected readonly graphTitle = computed(() =>
@@ -166,18 +271,128 @@ export class DiagramCanvas implements OnDestroy {
   );
   protected readonly activeModel = signal<ModelAdapter | null>(null);
   protected readonly canvasError = signal<string | null>(null);
+  protected readonly diagramConfig = computed<NgDiagramConfig>(() => ({
+    linking: {
+      validateConnection: (
+        source: SimpleNode | null,
+        _sourcePort: Port | null,
+        target: SimpleNode | null,
+        _targetPort: Port | null,
+      ) => {
+        if (!source || !target) {
+          return false;
+        }
+
+        const sourceNode = this.diagramStore
+          .nodes()
+          .find((node) => node.id === source.id);
+        const targetNode = this.diagramStore
+          .nodes()
+          .find((node) => node.id === target.id);
+
+        if (!sourceNode || !targetNode) {
+          return false;
+        }
+
+        return this.relationshipRules.validateConnection({
+          sourceType: sourceNode.type,
+          targetType: targetNode.type,
+          relationshipType:
+            this.relationshipRules.getAllowedRelationshipTypes(
+              sourceNode.type,
+              targetNode.type,
+            )[0] ?? 'influences',
+          label:
+            this.relationshipRules.getAllowedRelationshipTypes(
+              sourceNode.type,
+              targetNode.type,
+            )[0] ?? 'influences',
+          sourceNodeId: sourceNode.id,
+          targetNodeId: targetNode.id,
+        }).valid;
+      },
+      finalEdgeDataBuilder: (edge: Edge<DiagramEdgeData>) => ({
+        ...edge,
+        type: 'graph-edge',
+        sourcePort: edge.sourcePort || 'port-right',
+        targetPort: edge.targetPort || 'port-left',
+        data: {
+          label: 'influences',
+          relationshipType: 'influences',
+          confidence: 'low',
+          isDimmed: false,
+          isHighlighted: true,
+        },
+      }),
+      temporaryEdgeDataBuilder: (edge: Edge<DiagramEdgeData>) => ({
+        ...edge,
+        type: 'graph-edge',
+        sourcePort: edge.sourcePort || 'port-right',
+        targetPort: edge.targetPort || 'port-left',
+        data: {
+          label: 'linking',
+          relationshipType: 'influences',
+          confidence: 'low',
+          isDimmed: false,
+          isHighlighted: true,
+        },
+      }),
+    },
+  }));
   protected readonly nodeTemplateMap = new NgDiagramNodeTemplateMap([
     ['graph-node', GraphNodeTemplate],
   ]);
+  protected readonly edgeTemplateMap = new NgDiagramEdgeTemplateMap([
+    ['graph-edge', GraphEdgeTemplate],
+  ]);
 
   constructor() {
+    effect(() => {
+      const action = this.viewportAction();
+      const model = this.activeModel();
+
+      if (
+        !action ||
+        action.id === this.lastHandledViewportActionId ||
+        !this.isBrowser ||
+        !model
+      ) {
+        return;
+      }
+
+      try {
+        switch (action.type) {
+          case 'fit':
+            this.viewportService.zoomToFit({ padding: 48 });
+            break;
+          case 'zoom-in':
+            this.viewportService.zoom(1.15);
+            break;
+          case 'zoom-out':
+            this.viewportService.zoom(0.85);
+            break;
+        }
+
+        this.canvasError.set(null);
+        this.lastHandledViewportActionId = action.id;
+      } catch (error) {
+        this.canvasError.set(
+          error instanceof Error
+            ? error.message
+            : 'Unable to update the canvas viewport.',
+        );
+      }
+    });
+
     combineLatest([
       toObservable(this.diagramStore.graph),
       toObservable(this.diagramStore.nodes),
       toObservable(this.diagramStore.edges),
+      toObservable(this.diagramStore.selection),
+      toObservable(this.diagramStore.filterState),
     ])
       .pipe(takeUntilDestroyed())
-      .subscribe(([graph, nodes, edges]) => {
+      .subscribe(([graph, nodes, edges, selection, filterState]) => {
         if (!this.isBrowser || !graph) {
           this.destroyActiveModel();
           this.canvasError.set(null);
@@ -186,11 +401,16 @@ export class DiagramCanvas implements OnDestroy {
         }
 
         try {
-          const selection = this.diagramStore.selection();
           const currentModel = this.activeModel();
           const graphChanged = this.lastGraphRef !== graph;
           const nodesChanged = this.lastNodesRef !== nodes;
           const edgesChanged = this.lastEdgesRef !== edges;
+          const selectionKey = selection
+            ? `${selection.kind}:${selection.id}`
+            : '';
+          const filterKey = JSON.stringify(filterState);
+          const selectionChanged = this.lastSelectionKey !== selectionKey;
+          const filterChanged = this.lastFilterKey !== filterKey;
 
           if (!currentModel || this.activeGraphId !== graph.id) {
             this.destroyActiveModel();
@@ -202,11 +422,18 @@ export class DiagramCanvas implements OnDestroy {
                   edges,
                 },
                 selection,
+                filterState,
                 this.injector,
               ),
             );
             this.activeGraphId = graph.id;
-          } else if (graphChanged || nodesChanged || edgesChanged) {
+          } else if (
+            graphChanged ||
+            nodesChanged ||
+            edgesChanged ||
+            selectionChanged ||
+            filterChanged
+          ) {
             if (this.dragInProgress) {
               return;
             }
@@ -223,6 +450,7 @@ export class DiagramCanvas implements OnDestroy {
                     edges,
                   },
                   selection,
+                  filterState,
                   this.injector,
                 ),
               );
@@ -233,6 +461,8 @@ export class DiagramCanvas implements OnDestroy {
           this.lastGraphRef = graph;
           this.lastNodesRef = nodes;
           this.lastEdgesRef = edges;
+          this.lastSelectionKey = selectionKey;
+          this.lastFilterKey = filterKey;
 
           this.canvasError.set(null);
         } catch (error) {
@@ -250,10 +480,67 @@ export class DiagramCanvas implements OnDestroy {
   }
 
   protected onSelectionChanged(event: SelectionGestureEndedEvent): void {
+    if (event.nodes.length > 0 || event.edges.length > 0) {
+      this.canvasError.set(null);
+    }
+
     this.diagramStore.updateSelection(
       event.nodes.map((node) => node.id),
       event.edges.map((edge) => edge.id),
     );
+  }
+
+  protected async onEdgeDrawn(event: EdgeDrawnEvent): Promise<void> {
+    this.skipNextModelRefresh = true;
+
+    const created = await this.diagramStore.createEdge(
+      event.source.id,
+      event.target.id,
+    );
+
+    if (created) {
+      this.canvasError.set(null);
+    }
+
+    if (!created) {
+      const graph = this.diagramStore.graph();
+      const currentModel = this.activeModel();
+
+      if (!graph) {
+        return;
+      }
+
+      const graphDocument = {
+        graph,
+        nodes: this.diagramStore.nodes(),
+        edges: this.diagramStore.edges(),
+      };
+      const selection = this.diagramStore.selection();
+      const filterState = this.diagramStore.filterState();
+
+      if (currentModel) {
+        syncDiagramModel(currentModel, graphDocument, selection, filterState);
+      } else {
+        this.activeModel.set(
+          buildDiagramModel(
+            graphDocument,
+            selection,
+            filterState,
+            this.injector,
+          ),
+        );
+      }
+
+      this.activeGraphId = graph.id;
+      this.lastGraphRef = graph;
+      this.lastNodesRef = this.diagramStore.nodes();
+      this.lastEdgesRef = this.diagramStore.edges();
+      this.lastSelectionKey = selection
+        ? `${selection.kind}:${selection.id}`
+        : '';
+      this.lastFilterKey = JSON.stringify(filterState);
+      this.canvasError.set(null);
+    }
   }
 
   protected onNodeDragStarted(_event: NodeDragStartedEvent): void {
@@ -278,6 +565,8 @@ export class DiagramCanvas implements OnDestroy {
     this.lastGraphRef = null;
     this.lastNodesRef = null;
     this.lastEdgesRef = null;
+    this.lastSelectionKey = '';
+    this.lastFilterKey = '';
   }
 }
 

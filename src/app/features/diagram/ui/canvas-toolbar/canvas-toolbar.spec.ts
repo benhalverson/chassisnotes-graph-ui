@@ -13,10 +13,52 @@ describe('CanvasToolbar', () => {
 
     fixture = TestBed.createComponent(CanvasToolbar);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('disables canvas controls until a graph is active', () => {
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button'),
+    ) as HTMLButtonElement[];
+
+    expect(buttons.every((button) => button.disabled)).toBe(true);
+  });
+
+  it('emits fit and zoom actions when controls are enabled', () => {
+    const fitSpy = vi.fn();
+    const zoomInSpy = vi.fn();
+    const zoomOutSpy = vi.fn();
+
+    component.fitRequested.subscribe(fitSpy);
+    component.zoomInRequested.subscribe(zoomInSpy);
+    component.zoomOutRequested.subscribe(zoomOutSpy);
+
+    fixture.componentRef.setInput('hasGraph', true);
+    fixture.componentRef.setInput('busy', false);
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button'),
+    ) as HTMLButtonElement[];
+
+    buttons[0]?.click();
+    buttons[1]?.click();
+    buttons[2]?.click();
+
+    expect(fitSpy).toHaveBeenCalledTimes(1);
+    expect(zoomInSpy).toHaveBeenCalledTimes(1);
+    expect(zoomOutSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the current toolbar status copy', () => {
+    fixture.componentRef.setInput(
+      'statusText',
+      'Use touch-friendly controls to frame the current map.',
+    );
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'Use touch-friendly controls to frame the current map.',
+    );
   });
 });

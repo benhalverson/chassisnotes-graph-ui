@@ -18,8 +18,11 @@
 			<div class="min-h-128 flex-1 bg-slate-950/40 p-3">
 				<ng-diagram
 					class="block h-full min-h-120 w-full rounded-md border border-slate-800 bg-slate-950"
+					[config]="diagramConfig()"
 					[model]="model"
 					[nodeTemplateMap]="nodeTemplateMap"
+					[edgeTemplateMap]="edgeTemplateMap"
+					(edgeDrawn)="onEdgeDrawn($event)"
 					(selectionGestureEnded)="onSelectionChanged($event)"
 					(nodeDragStarted)="onNodeDragStarted($event)"
 					(nodeDragEnded)="onNodeDragEnded($event)"

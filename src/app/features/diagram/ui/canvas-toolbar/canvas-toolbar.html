@@ -1,6 +1,37 @@
-<div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 p-2" role="toolbar" aria-label="Canvas actions">
-	<button type="button" class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-100">Fit</button>
-	<button type="button" class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-100">Zoom in</button>
-	<button type="button" class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-100">Zoom out</button>
-	<button type="button" class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-100">Export PNG</button>
+<div
+	class="flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-900/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+	role="toolbar"
+	aria-label="Canvas actions"
+>
+	<div class="min-w-0">
+		<p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Canvas</p>
+		<p class="mt-1 text-xs leading-5 text-slate-400" aria-live="polite">{{ statusText() }}</p>
+	</div>
+
+	<div class="grid grid-cols-3 gap-2 sm:flex">
+		<button
+			type="button"
+			[disabled]="controlsDisabled()"
+			class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition enabled:hover:border-slate-500 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-cyan-400 enabled:focus-visible:ring-offset-2 enabled:focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+			(click)="requestFit()"
+		>
+			Fit view
+		</button>
+		<button
+			type="button"
+			[disabled]="controlsDisabled()"
+			class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition enabled:hover:border-slate-500 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-cyan-400 enabled:focus-visible:ring-offset-2 enabled:focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+			(click)="requestZoomIn()"
+		>
+			Zoom in
+		</button>
+		<button
+			type="button"
+			[disabled]="controlsDisabled()"
+			class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition enabled:hover:border-slate-500 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-cyan-400 enabled:focus-visible:ring-offset-2 enabled:focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+			(click)="requestZoomOut()"
+		>
+			Zoom out
+		</button>
+	</div>
 </div>

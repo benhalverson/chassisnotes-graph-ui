@@ -134,4 +134,48 @@ describe('GraphsRepository', () => {
     expect(saved?.nodes[0]?.title).toBe('Updated setup lever');
     expect(saved?.graph.updatedAt).not.toBe(source.graph.updatedAt);
   });
+
+  it('should reject invalid edge directions when saving a graph document', async () => {
+    const graph = await service.createGraphFromTemplate(
+      'template-2wd-buggy-carpet-baseline',
+    );
+    const source = await service.loadGraph(graph.id);
+
+    expect(source).not.toBeNull();
+
+    if (!source) {
+      throw new Error('Expected a saved graph document.');
+    }
+
+    const setupNode = source.nodes.find((node) => node.type === 'setup');
+    const symptomNode = source.nodes.find((node) => node.type === 'symptom');
+
+    expect(setupNode).toBeDefined();
+    expect(symptomNode).toBeDefined();
+
+    await expect(
+      service.saveGraphDocument({
+        graph: source.graph,
+        nodes: source.nodes,
+        edges: [
+          {
+            id: 'edge-invalid',
+            graphId: source.graph.id,
+            sourceNodeId: symptomNode?.id ?? 'missing-source',
+            targetNodeId: setupNode?.id ?? 'missing-target',
+            relationshipType: 'observed',
+            label: 'observed',
+            description: 'Invalid reverse direction for regression coverage.',
+            confidence: 'medium',
+            phaseTags: ['entry'],
+            evidenceType: 'observed',
+            createdAt: '2026-03-14T00:00:00.000Z',
+            updatedAt: '2026-03-14T00:00:00.000Z',
+          },
+        ],
+      }),
+    ).rejects.toThrowError(
+      /Connections from symptom to setup are not allowed./,
+    );
+  });
 });

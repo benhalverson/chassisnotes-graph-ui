@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { assertValidGraphDocument } from '../../../features/diagram/data-access/relationship-rules';
 import { TemplatesCatalog } from '../../../features/templates/data-access/templates-catalog';
 import type {
   GraphEdgeRecord,
@@ -89,6 +90,8 @@ export class GraphsRepository {
       updatedAt: timestamp,
     }));
 
+    assertValidGraphDocument({ graph, nodes, edges });
+
     await this.db.transaction(
       'rw',
       this.db.graphs,
@@ -145,6 +148,8 @@ export class GraphsRepository {
       createdAt: timestamp,
       updatedAt: timestamp,
     }));
+
+    assertValidGraphDocument({ graph, nodes, edges });
 
     await this.db.transaction(
       'rw',
@@ -220,6 +225,8 @@ export class GraphsRepository {
       ...edge,
       graphId: graph.id,
     }));
+
+    assertValidGraphDocument({ graph, nodes, edges });
 
     await this.db.transaction(
       'rw',

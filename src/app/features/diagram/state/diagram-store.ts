@@ -10,13 +10,17 @@ import { initializeModel, type ModelAdapter } from 'ng-diagram';
 import { GraphsRepository } from '../../../core/db/repositories/graphs-repository';
 import type {
   ConfidenceLevel,
+  EvidenceType,
   GraphEdgeRecord,
   GraphNodeRecord,
   GraphNodeType,
+  GraphPhaseTag,
   GraphPosition,
   GraphRecord,
   PersistedGraphDocument,
+  RelationshipType,
 } from '../../../core/models/graph.models';
+import { RelationshipRules } from '../data-access/relationship-rules';
 
 export type DiagramSelection =
   | { kind: 'node'; id: string }
@@ -28,20 +32,53 @@ type DiagramState = {
   nodes: GraphNodeRecord[];
   edges: GraphEdgeRecord[];
   selection: DiagramSelection;
+  filters: DiagramFilters;
   loading: boolean;
   mutating: boolean;
   error: string | null;
+  validationError: string | null;
 };
 
-const initialState: DiagramState = {
-  graph: null,
-  nodes: [],
-  edges: [],
-  selection: null,
-  loading: false,
-  mutating: false,
-  error: null,
+export type DiagramFilters = {
+  nodeTypes: GraphNodeType[];
+  phaseTags: GraphPhaseTag[];
+  confidenceLevels: ConfidenceLevel[];
+  evidenceTypes: EvidenceType[];
+  highlightSelectionNeighborhood: boolean;
 };
+
+export type DiagramFilterState = {
+  matchedNodeIds: string[];
+  matchedEdgeIds: string[];
+  highlightedNodeIds: string[];
+  highlightedEdgeIds: string[];
+  dimmedNodeIds: string[];
+  dimmedEdgeIds: string[];
+};
+
+function createInitialFilters(): DiagramFilters {
+  return {
+    nodeTypes: [],
+    phaseTags: [],
+    confidenceLevels: [],
+    evidenceTypes: [],
+    highlightSelectionNeighborhood: true,
+  };
+}
+
+function createInitialState(): DiagramState {
+  return {
+    graph: null,
+    nodes: [],
+    edges: [],
+    selection: null,
+    filters: createInitialFilters(),
+    loading: false,
+    mutating: false,
+    error: null,
+    validationError: null,
+  };
+}
 
 /**
  * Editor-facing state for the currently opened persisted graph document.
@@ -53,31 +90,57 @@ const initialState: DiagramState = {
  */
 export const DiagramStore = signalStore(
   { providedIn: 'root' },
-  withState(initialState),
-  withComputed((store) => ({
-    graphTitle: computed(() => store.graph()?.name ?? 'Graph editor'),
-    hasActiveGraph: computed(() => store.graph() !== null),
-    selectedNode: computed(() => {
-      const selection = store.selection();
+  withState(createInitialState()),
+  withComputed((store) => {
+    const filterState = computed<DiagramFilterState>(() =>
+      computeDiagramFilterState(
+        store.nodes(),
+        store.edges(),
+        store.selection(),
+        store.filters(),
+      ),
+    );
 
-      if (selection?.kind !== 'node') {
-        return null;
-      }
+    return {
+      graphTitle: computed(() => store.graph()?.name ?? 'Graph editor'),
+      hasActiveGraph: computed(() => store.graph() !== null),
+      filterState,
+      selectedNode: computed(() => {
+        const selection = store.selection();
 
-      return store.nodes().find((node) => node.id === selection.id) ?? null;
-    }),
-    selectedEdge: computed(() => {
-      const selection = store.selection();
+        if (selection?.kind !== 'node') {
+          return null;
+        }
 
-      if (selection?.kind !== 'edge') {
-        return null;
-      }
+        return store.nodes().find((node) => node.id === selection.id) ?? null;
+      }),
+      selectedEdge: computed(() => {
+        const selection = store.selection();
 
-      return store.edges().find((edge) => edge.id === selection.id) ?? null;
-    }),
-  })),
+        if (selection?.kind !== 'edge') {
+          return null;
+        }
+
+        return store.edges().find((edge) => edge.id === selection.id) ?? null;
+      }),
+      matchedNodeIds: computed(() => filterState().matchedNodeIds),
+      matchedEdgeIds: computed(() => filterState().matchedEdgeIds),
+      highlightedNodeIds: computed(() => filterState().highlightedNodeIds),
+      highlightedEdgeIds: computed(() => filterState().highlightedEdgeIds),
+      dimmedNodeIds: computed(() => filterState().dimmedNodeIds),
+      dimmedEdgeIds: computed(() => filterState().dimmedEdgeIds),
+    };
+  }),
   withMethods((store) => {
     const graphsRepository = inject(GraphsRepository);
+    const relationshipRules = inject(RelationshipRules);
+
+    const patchFilters = (filters: DiagramFilters): void => {
+      patchState(store, {
+        filters,
+        validationError: null,
+      });
+    };
 
     const persistGraphDocument = async (
       graph: GraphRecord,
@@ -85,7 +148,11 @@ export const DiagramStore = signalStore(
       edges: GraphEdgeRecord[],
       selection: DiagramSelection,
     ): Promise<void> => {
-      patchState(store, { mutating: true, error: null });
+      patchState(store, {
+        mutating: true,
+        error: null,
+        validationError: null,
+      });
 
       try {
         const updatedGraph = await graphsRepository.saveGraphDocument({
@@ -100,6 +167,7 @@ export const DiagramStore = signalStore(
           edges,
           selection,
           mutating: false,
+          validationError: null,
         });
       } catch (error) {
         patchState(store, {
@@ -112,7 +180,13 @@ export const DiagramStore = signalStore(
 
     return {
       async loadGraph(graphId: string): Promise<void> {
-        patchState(store, { loading: true, error: null });
+        patchState(store, {
+          loading: true,
+          selection: null,
+          filters: createInitialFilters(),
+          error: null,
+          validationError: null,
+        });
 
         try {
           const graphDocument = await graphsRepository.loadGraph(graphId);
@@ -124,6 +198,7 @@ export const DiagramStore = signalStore(
               nodes: [],
               edges: [],
               selection: null,
+              filters: createInitialFilters(),
               error: 'Graph not found.',
             });
 
@@ -136,6 +211,9 @@ export const DiagramStore = signalStore(
             nodes: graphDocument.nodes,
             edges: graphDocument.edges,
             selection: null,
+            filters: createInitialFilters(),
+            error: null,
+            validationError: null,
           });
         } catch (error) {
           patchState(store, {
@@ -162,11 +240,85 @@ export const DiagramStore = signalStore(
           return;
         }
 
-        patchState(store, { selection: nextSelection });
+        patchState(store, {
+          selection: nextSelection,
+          validationError: null,
+        });
       },
 
       clearSelection(): void {
-        patchState(store, { selection: null });
+        patchState(store, {
+          selection: null,
+          validationError: null,
+        });
+      },
+
+      clearValidationError(): void {
+        patchState(store, { validationError: null });
+      },
+
+      setFilters(filters: Partial<DiagramFilters>): void {
+        patchFilters({
+          ...store.filters(),
+          ...filters,
+        });
+      },
+
+      resetFilters(): void {
+        patchFilters(createInitialFilters());
+      },
+
+      toggleNodeTypeFilter(type: GraphNodeType, enabled: boolean): void {
+        patchFilters({
+          ...store.filters(),
+          nodeTypes: toggleFilterValue(
+            store.filters().nodeTypes,
+            type,
+            enabled,
+          ),
+        });
+      },
+
+      togglePhaseTagFilter(tag: GraphPhaseTag, enabled: boolean): void {
+        patchFilters({
+          ...store.filters(),
+          phaseTags: toggleFilterValue(store.filters().phaseTags, tag, enabled),
+        });
+      },
+
+      toggleConfidenceFilter(
+        confidence: ConfidenceLevel,
+        enabled: boolean,
+      ): void {
+        patchFilters({
+          ...store.filters(),
+          confidenceLevels: toggleFilterValue(
+            store.filters().confidenceLevels,
+            confidence,
+            enabled,
+          ),
+        });
+      },
+
+      toggleEvidenceTypeFilter(
+        evidenceType: EvidenceType,
+        enabled: boolean,
+      ): void {
+        patchFilters({
+          ...store.filters(),
+          evidenceTypes: toggleFilterValue(
+            store.filters().evidenceTypes,
+            evidenceType,
+            enabled,
+          ),
+        });
+      },
+
+      setSelectionNeighborhoodHighlight(enabled: boolean): void {
+        patchFilters({
+          ...store.filters(),
+          highlightSelectionNeighborhood: enabled,
+        });
       },
 
       async addNode(type: GraphNodeType): Promise<void> {
@@ -181,6 +333,90 @@ export const DiagramStore = signalStore(
         const selection = { kind: 'node', id: node.id } as const;
 
         await persistGraphDocument(graph, nodes, store.edges(), selection);
+      },
+
+      async createEdge(
+        sourceNodeId: string,
+        targetNodeId: string,
+        relationshipType?: RelationshipType,
+      ): Promise<boolean> {
+        const graph = store.graph();
+
+        if (!graph) {
+          return false;
+        }
+
+        const sourceNode = store
+          .nodes()
+          .find((node) => node.id === sourceNodeId);
+        const targetNode = store
+          .nodes()
+          .find((node) => node.id === targetNodeId);
+
+        if (!sourceNode || !targetNode) {
+          patchState(store, {
+            validationError:
+              'Both source and target nodes must exist before creating an edge.',
+          });
+
+          return false;
+        }
+
+        const allowedRelationshipTypes =
+          relationshipRules.getAllowedRelationshipTypes(
+            sourceNode.type,
+            targetNode.type,
+          );
+
+        if (allowedRelationshipTypes.length === 0) {
+          patchState(store, {
+            validationError: `Connections from ${sourceNode.type} to ${targetNode.type} are not allowed.`,
+          });
+
+          return false;
+        }
+
+        const nextRelationshipType =
+          relationshipType ?? allowedRelationshipTypes[0];
+        const validationResult = relationshipRules.validateConnection({
+          sourceType: sourceNode.type,
+          targetType: targetNode.type,
+          relationshipType: nextRelationshipType,
+          label: nextRelationshipType,
+          sourceNodeId,
+          targetNodeId,
+        });
+
+        if (!validationResult.valid) {
+          patchState(store, {
+            validationError: validationResult.errors.join(' '),
+          });
+
+          return false;
+        }
+
+        const timestamp = new Date().toISOString();
+        const edge: GraphEdgeRecord = {
+          id: createId('edge'),
+          graphId: graph.id,
+          sourceNodeId,
+          targetNodeId,
+          relationshipType: nextRelationshipType,
+          label: nextRelationshipType,
+          description: '',
+          confidence: 'low',
+          phaseTags: [],
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        };
+        const edges = [...store.edges(), edge];
+
+        await persistGraphDocument(graph, store.nodes(), edges, {
+          kind: 'edge',
+          id: edge.id,
+        });
+
+        return true;
       },
 
       async updateNode(
@@ -224,6 +460,94 @@ export const DiagramStore = signalStore(
         );
       },
 
+      async updateEdge(
+        edgeId: string,
+        changes: Partial<
+          Pick<
+            GraphEdgeRecord,
+            | 'relationshipType'
+            | 'label'
+            | 'description'
+            | 'confidence'
+            | 'phaseTags'
+            | 'evidenceType'
+          >
+        >,
+      ): Promise<boolean> {
+        const graph = store.graph();
+
+        if (!graph) {
+          return false;
+        }
+
+        const edges = store.edges();
+        const targetEdge = edges.find((edge) => edge.id === edgeId);
+
+        if (!targetEdge) {
+          return false;
+        }
+
+        const sourceNode = store
+          .nodes()
+          .find((node) => node.id === targetEdge.sourceNodeId);
+        const targetNode = store
+          .nodes()
+          .find((node) => node.id === targetEdge.targetNodeId);
+
+        if (!sourceNode || !targetNode) {
+          patchState(store, {
+            validationError: 'The selected edge references a missing node.',
+          });
+
+          return false;
+        }
+
+        const nextEdge = {
+          ...targetEdge,
+          ...changes,
+          label:
+            changes.label?.trim() ??
+            changes.relationshipType ??
+            targetEdge.label,
+        } satisfies GraphEdgeRecord;
+
+        const validationResult = relationshipRules.validateConnection({
+          sourceType: sourceNode.type,
+          targetType: targetNode.type,
+          relationshipType: nextEdge.relationshipType,
+          label: nextEdge.label,
+          sourceNodeId: nextEdge.sourceNodeId,
+          targetNodeId: nextEdge.targetNodeId,
+        });
+
+        if (!validationResult.valid) {
+          patchState(store, {
+            validationError: validationResult.errors.join(' '),
+          });
+
+          return false;
+        }
+
+        const timestamp = new Date().toISOString();
+        const updatedEdges = edges.map((edge) =>
+          edge.id === edgeId
+            ? {
+                ...nextEdge,
+                updatedAt: timestamp,
+              }
+            : edge,
+        );
+
+        await persistGraphDocument(
+          { ...graph, updatedAt: timestamp },
+          store.nodes(),
+          updatedEdges,
+          store.selection(),
+        );
+
+        return true;
+      },
+
       async deleteSelectedNode(): Promise<void> {
         const graph = store.graph();
         const selection = store.selection();
@@ -247,6 +571,27 @@ export const DiagramStore = signalStore(
         await persistGraphDocument(
           { ...graph, updatedAt: timestamp },
           remainingNodes,
+          remainingEdges,
+          null,
+        );
+      },
+
+      async deleteSelectedEdge(): Promise<void> {
+        const graph = store.graph();
+        const selection = store.selection();
+
+        if (!graph || selection?.kind !== 'edge') {
+          return;
+        }
+
+        const timestamp = new Date().toISOString();
+        const remainingEdges = store
+          .edges()
+          .filter((edge) => edge.id !== selection.id);
+
+        await persistGraphDocument(
+          { ...graph, updatedAt: timestamp },
+          store.nodes(),
           remainingEdges,
           null,
         );
@@ -302,7 +647,7 @@ export const DiagramStore = signalStore(
       },
 
       clear(): void {
-        patchState(store, initialState);
+        patchState(store, createInitialState());
       },
     };
   }),
@@ -311,15 +656,17 @@ export const DiagramStore = signalStore(
 export function buildDiagramModel(
   graphDocument: PersistedGraphDocument,
   selection: DiagramSelection,
+  filterState: DiagramFilterState,
   injector?: Injector,
 ): ModelAdapter {
   return initializeModel(
     {
-      nodes: createDiagramNodes(graphDocument.nodes, selection),
+      nodes: createDiagramNodes(graphDocument.nodes, selection, filterState),
       edges: createDiagramEdges(
         graphDocument.nodes,
         graphDocument.edges,
         selection,
+        filterState,
       ),
     },
     injector,
@@ -330,16 +677,25 @@ export function syncDiagramModel(
   model: ModelAdapter,
   graphDocument: PersistedGraphDocument,
   selection: DiagramSelection,
+  filterState: DiagramFilterState,
 ): void {
-  model.updateNodes(createDiagramNodes(graphDocument.nodes, selection));
+  model.updateNodes(
+    createDiagramNodes(graphDocument.nodes, selection, filterState),
+  );
   model.updateEdges(
-    createDiagramEdges(graphDocument.nodes, graphDocument.edges, selection),
+    createDiagramEdges(
+      graphDocument.nodes,
+      graphDocument.edges,
+      selection,
+      filterState,
+    ),
   );
 }
 
 function createDiagramNodes(
   graphNodes: readonly GraphNodeRecord[],
   selection: DiagramSelection,
+  filterState: DiagramFilterState,
 ) {
   return graphNodes
     .filter((node) => node.id.trim().length > 0)
@@ -360,6 +716,8 @@ function createDiagramNodes(
         description: node.description,
         phaseTags: node.phaseTags,
         confidence: node.confidence,
+        isDimmed: filterState.dimmedNodeIds.includes(node.id),
+        isHighlighted: filterState.highlightedNodeIds.includes(node.id),
       },
     }));
 }
@@ -368,6 +726,7 @@ function createDiagramEdges(
   graphNodes: readonly GraphNodeRecord[],
   graphEdges: readonly GraphEdgeRecord[],
   selection: DiagramSelection,
+  filterState: DiagramFilterState,
 ) {
   const nodeIds = new Set(
     graphNodes
@@ -385,6 +744,7 @@ function createDiagramEdges(
     .map((edge) => ({
       id: edge.id,
       source: edge.sourceNodeId,
+      type: 'graph-edge',
       sourcePort: 'port-right',
       target: edge.targetNodeId,
       targetPort: 'port-left',
@@ -393,6 +753,9 @@ function createDiagramEdges(
         label: edge.label || edge.relationshipType,
         relationshipType: edge.relationshipType,
         evidenceType: edge.evidenceType,
+        confidence: edge.confidence,
+        isDimmed: filterState.dimmedEdgeIds.includes(edge.id),
+        isHighlighted: filterState.highlightedEdgeIds.includes(edge.id),
       },
     }));
 }
@@ -462,4 +825,134 @@ function createId(prefix: string): string {
 
 function capitalizeLabel(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function toggleFilterValue<T>(
+  values: readonly T[],
+  value: T,
+  enabled: boolean,
+): T[] {
+  if (enabled) {
+    return values.includes(value) ? [...values] : [...values, value];
+  }
+
+  return values.filter((entry) => entry !== value);
+}
+
+function computeDiagramFilterState(
+  nodes: readonly GraphNodeRecord[],
+  edges: readonly GraphEdgeRecord[],
+  selection: DiagramSelection,
+  filters: DiagramFilters,
+): DiagramFilterState {
+  const matchedNodeIds = new Set<string>();
+
+  nodes.forEach((node) => {
+    if (matchesNodeFilters(node, filters)) {
+      matchedNodeIds.add(node.id);
+    }
+  });
+
+  const matchedEdgeIds = new Set<string>();
+
+  edges.forEach((edge) => {
+    if (
+      matchedNodeIds.has(edge.sourceNodeId) &&
+      matchedNodeIds.has(edge.targetNodeId) &&
+      matchesEdgeFilters(edge, filters)
+    ) {
+      matchedEdgeIds.add(edge.id);
+    }
+  });
+
+  const highlightedNodeIds = new Set<string>(matchedNodeIds);
+  const highlightedEdgeIds = new Set<string>(matchedEdgeIds);
+
+  if (filters.highlightSelectionNeighborhood) {
+    if (selection?.kind === 'node') {
+      highlightedNodeIds.add(selection.id);
+
+      edges.forEach((edge) => {
+        if (
+          edge.sourceNodeId === selection.id ||
+          edge.targetNodeId === selection.id
+        ) {
+          highlightedEdgeIds.add(edge.id);
+          highlightedNodeIds.add(edge.sourceNodeId);
+          highlightedNodeIds.add(edge.targetNodeId);
+        }
+      });
+    }
+
+    if (selection?.kind === 'edge') {
+      highlightedEdgeIds.add(selection.id);
+
+      const selectedEdge = edges.find((edge) => edge.id === selection.id);
+
+      if (selectedEdge) {
+        highlightedNodeIds.add(selectedEdge.sourceNodeId);
+        highlightedNodeIds.add(selectedEdge.targetNodeId);
+      }
+    }
+  }
+
+  const dimmedNodeIds = nodes
+    .filter((node) => !highlightedNodeIds.has(node.id))
+    .map((node) => node.id);
+  const dimmedEdgeIds = edges
+    .filter((edge) => !highlightedEdgeIds.has(edge.id))
+    .map((edge) => edge.id);
+
+  return {
+    matchedNodeIds: [...matchedNodeIds],
+    matchedEdgeIds: [...matchedEdgeIds],
+    highlightedNodeIds: [...highlightedNodeIds],
+    highlightedEdgeIds: [...highlightedEdgeIds],
+    dimmedNodeIds,
+    dimmedEdgeIds,
+  };
+}
+
+function matchesNodeFilters(
+  node: GraphNodeRecord,
+  filters: DiagramFilters,
+): boolean {
+  return (
+    matchesFilterList(filters.nodeTypes, node.type) &&
+    matchesFilterList(filters.confidenceLevels, node.confidence) &&
+    matchesFilterIntersection(filters.phaseTags, node.phaseTags)
+  );
+}
+
+function matchesEdgeFilters(
+  edge: GraphEdgeRecord,
+  filters: DiagramFilters,
+): boolean {
+  return (
+    matchesFilterList(filters.confidenceLevels, edge.confidence) &&
+    matchesFilterIntersection(filters.phaseTags, edge.phaseTags) &&
+    matchesOptionalFilterList(filters.evidenceTypes, edge.evidenceType)
+  );
+}
+
+function matchesFilterList<T>(filters: readonly T[], value: T): boolean {
+  return filters.length === 0 || filters.includes(value);
+}
+
+function matchesOptionalFilterList<T>(
+  filters: readonly T[],
+  value: T | undefined,
+): boolean {
+  return (
+    filters.length === 0 || (value !== undefined && filters.includes(value))
+  );
+}
+
+function matchesFilterIntersection<T>(
+  filters: readonly T[],
+  values: readonly T[],
+): boolean {
+  return (
+    filters.length === 0 || values.some((value) => filters.includes(value))
+  );
 }

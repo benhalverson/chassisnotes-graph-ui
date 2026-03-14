@@ -184,4 +184,110 @@ describe('DiagramStore', () => {
     ).toEqual({ x: 220, y: 168 });
     expect(graphsRepositorySpy.saveGraphDocument).toHaveBeenCalledTimes(1);
   });
+
+  it('should create a valid edge and select it', async () => {
+    await service.loadGraph(graph.id);
+
+    const result = await service.createEdge('node-1', 'node-2', 'influences');
+
+    expect(result).toBe(true);
+    expect(service.edges()).toHaveLength(2);
+    expect(service.selectedEdge()?.relationshipType).toBe('influences');
+    expect(service.validationError()).toBeNull();
+    expect(graphsRepositorySpy.saveGraphDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject invalid edge directions without persisting', async () => {
+    await service.loadGraph(graph.id);
+
+    const result = await service.createEdge('node-2', 'node-1', 'observed');
+
+    expect(result).toBe(false);
+    expect(service.edges()).toHaveLength(1);
+    expect(service.validationError()).toContain(
+      'Connections from symptom to setup are not allowed.',
+    );
+    expect(graphsRepositorySpy.saveGraphDocument).not.toHaveBeenCalled();
+  });
+
+  it('should clear validation feedback after a successful selection change', async () => {
+    await service.loadGraph(graph.id);
+    await service.createEdge('node-2', 'node-1', 'observed');
+
+    expect(service.validationError()).toContain(
+      'Connections from symptom to setup are not allowed.',
+    );
+
+    service.updateSelection(['node-1'], []);
+
+    expect(service.validationError()).toBeNull();
+    expect(service.selectedNode()?.id).toBe('node-1');
+  });
+
+  it('should update selected edge metadata and persist it', async () => {
+    await service.loadGraph(graph.id);
+
+    service.updateSelection([], ['edge-1']);
+    const result = await service.updateEdge('edge-1', {
+      relationshipType: 'influences',
+      label: 'influences',
+      confidence: 'high',
+      evidenceType: 'observed',
+    });
+
+    expect(result).toBe(true);
+    expect(service.selectedEdge()?.relationshipType).toBe('influences');
+    expect(service.selectedEdge()?.confidence).toBe('high');
+    expect(service.selectedEdge()?.evidenceType).toBe('observed');
+    expect(graphsRepositorySpy.saveGraphDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it('should delete a selected edge', async () => {
+    await service.loadGraph(graph.id);
+
+    service.updateSelection([], ['edge-1']);
+    await service.deleteSelectedEdge();
+
+    expect(service.edges()).toHaveLength(0);
+    expect(service.selectedEdge()).toBeNull();
+    expect(graphsRepositorySpy.saveGraphDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it('should derive dimmed and highlighted state from filters', async () => {
+    await service.loadGraph(graph.id);
+
+    service.toggleConfidenceFilter('high', true);
+
+    expect(service.matchedNodeIds()).toEqual([]);
+    expect(service.matchedEdgeIds()).toEqual([]);
+    expect(service.dimmedNodeIds()).toEqual(['node-1', 'node-2']);
+    expect(service.dimmedEdgeIds()).toEqual(['edge-1']);
+
+    service.updateSelection(['node-1'], []);
+
+    expect(service.highlightedNodeIds()).toContain('node-1');
+    expect(service.highlightedNodeIds()).toContain('node-2');
+    expect(service.highlightedEdgeIds()).toContain('edge-1');
+  });
+
+  it('should reset filters and validation state when loading a graph', async () => {
+    await service.loadGraph(graph.id);
+
+    service.toggleNodeTypeFilter('setup', true);
+    await service.createEdge('node-2', 'node-1', 'observed');
+
+    expect(service.filters().nodeTypes).toEqual(['setup']);
+    expect(service.validationError()).not.toBeNull();
+
+    await service.loadGraph(graph.id);
+
+    expect(service.filters()).toEqual({
+      nodeTypes: [],
+      phaseTags: [],
+      confidenceLevels: [],
+      evidenceTypes: [],
+      highlightSelectionNeighborhood: true,
+    });
+    expect(service.validationError()).toBeNull();
+  });
 });

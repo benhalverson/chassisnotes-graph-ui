@@ -1,18 +1,95 @@
-<form class="space-y-2" aria-label="Graph filters">
-	<label class="flex items-center gap-2 text-xs text-slate-200">
-		<input type="checkbox" class="h-4 w-4" />
-		Entry
+<section class="space-y-4" aria-label="Graph filters">
+	<div class="flex items-center justify-between gap-3">
+		<p class="text-xs leading-5 text-slate-400">Dim non-matching content while keeping the full map readable.</p>
+		<button
+			type="button"
+			class="rounded border border-slate-700 px-2 py-1 text-[11px] font-medium text-slate-200 transition hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+			(click)="resetFilters()"
+		>
+			Clear
+		</button>
+	</div>
+
+	<fieldset class="space-y-2">
+		<legend class="text-xs font-semibold uppercase tracking-wide text-slate-300">Node category</legend>
+		<div class="grid grid-cols-2 gap-2">
+			@for (nodeType of nodeTypes; track nodeType) {
+				<label class="flex items-center gap-2 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200">
+					<input
+						#nodeTypeInput
+						type="checkbox"
+						class="size-3 rounded border-slate-600 bg-slate-900 text-cyan-400"
+						[checked]="hasNodeTypeFilter(nodeType)"
+						(change)="toggleNodeType(nodeType, nodeTypeInput.checked)"
+					/>
+					<span>{{ nodeType }}</span>
+				</label>
+			}
+		</div>
+	</fieldset>
+
+	<fieldset class="space-y-2">
+		<legend class="text-xs font-semibold uppercase tracking-wide text-slate-300">Phase tags</legend>
+		<div class="grid grid-cols-2 gap-2">
+			@for (phase of phaseTags; track phase) {
+				<label class="flex items-center gap-2 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200">
+					<input
+						#phaseInput
+						type="checkbox"
+						class="size-3 rounded border-slate-600 bg-slate-900 text-cyan-400"
+						[checked]="hasPhaseTagFilter(phase)"
+						(change)="togglePhaseTag(phase, phaseInput.checked)"
+					/>
+					<span>{{ phase }}</span>
+				</label>
+			}
+		</div>
+	</fieldset>
+
+	<fieldset class="space-y-2">
+		<legend class="text-xs font-semibold uppercase tracking-wide text-slate-300">Confidence</legend>
+		<div class="grid gap-2">
+			@for (confidence of confidenceLevels; track confidence) {
+				<label class="flex items-center gap-2 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200">
+					<input
+						#confidenceInput
+						type="checkbox"
+						class="size-3 rounded border-slate-600 bg-slate-900 text-cyan-400"
+						[checked]="hasConfidenceFilter(confidence)"
+						(change)="toggleConfidence(confidence, confidenceInput.checked)"
+					/>
+					<span>{{ confidence }}</span>
+				</label>
+			}
+		</div>
+	</fieldset>
+
+	<fieldset class="space-y-2">
+		<legend class="text-xs font-semibold uppercase tracking-wide text-slate-300">Evidence type</legend>
+		<div class="grid gap-2">
+			@for (evidenceType of evidenceTypes; track evidenceType) {
+				<label class="flex items-center gap-2 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200">
+					<input
+						#evidenceTypeInput
+						type="checkbox"
+						class="size-3 rounded border-slate-600 bg-slate-900 text-cyan-400"
+						[checked]="hasEvidenceTypeFilter(evidenceType)"
+						(change)="toggleEvidenceType(evidenceType, evidenceTypeInput.checked)"
+					/>
+					<span>{{ evidenceType }}</span>
+				</label>
+			}
+		</div>
+	</fieldset>
+
+	<label class="flex items-center gap-2 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200">
+		<input
+			#selectionNeighborhoodInput
+			type="checkbox"
+			class="size-3 rounded border-slate-600 bg-slate-900 text-cyan-400"
+			[checked]="filters().highlightSelectionNeighborhood"
+			(change)="toggleSelectionNeighborhood(selectionNeighborhoodInput.checked)"
+		/>
+		<span>Highlight one-hop neighborhood on selection</span>
 	</label>
-	<label class="flex items-center gap-2 text-xs text-slate-200">
-		<input type="checkbox" class="h-4 w-4" />
-		Mid
-	</label>
-	<label class="flex items-center gap-2 text-xs text-slate-200">
-		<input type="checkbox" class="h-4 w-4" />
-		Exit
-	</label>
-	<label class="flex items-center gap-2 text-xs text-slate-200">
-		<input type="checkbox" class="h-4 w-4" />
-		High confidence only
-	</label>
-</form>
+</section>
