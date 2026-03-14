@@ -15,7 +15,7 @@
 				<p>Loading persisted graph…</p>
 			</div>
 		} @else if (activeModel(); as model) {
-			<div class="min-h-128 flex-1 bg-slate-950/40 p-3">
+			<div class="min-h-128 flex-1 bg-slate-950/40 p-3" data-diagram-export-root>
 				<ng-diagram
 					class="block h-full min-h-120 w-full rounded-md border border-slate-800 bg-slate-950"
 					[config]="diagramConfig()"
@@ -31,7 +31,7 @@
 		} @else {
 			<div class="grid min-h-128 flex-1 place-items-center bg-slate-950/30 p-6 text-center text-sm text-slate-300">
 				<p>
-					{{ diagramStore.graph() ? (canvasError() ?? 'The graph loaded, but the canvas could not render it.') : (diagramStore.error() ?? 'Select or create a graph from the library to begin.') }}
+					{{ diagramStore.graph() ? (canvasError() ?? 'The graph loaded, but the canvas could not render it.') : (diagramStore.error() ?? 'Open a saved graph, create one from a template, or use Import / Export to restore a backup.') }}
 				</p>
 			</div>
 		}

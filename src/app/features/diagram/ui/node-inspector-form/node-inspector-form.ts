@@ -5,6 +5,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormControl,
   FormGroup,
@@ -17,6 +18,7 @@ import {
   GRAPH_PHASE_TAGS,
   type GraphPhaseTag,
 } from '../../../../core/models/graph.models';
+import { Autosave } from '../../data-access/autosave';
 import { DiagramStore } from '../../state/diagram-store';
 
 @Component({
@@ -28,11 +30,13 @@ import { DiagramStore } from '../../state/diagram-store';
 })
 export class NodeInspectorForm {
   private readonly diagramStore = inject(DiagramStore);
+  private readonly autosave = inject(Autosave);
 
   protected readonly selectedNode = this.diagramStore.selectedNode;
   protected readonly confidenceLevels = CONFIDENCE_LEVELS;
   protected readonly phaseTags = GRAPH_PHASE_TAGS;
   protected readonly selectedPhaseTags = signal<GraphPhaseTag[]>([]);
+  protected readonly autosaveStatus = signal<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle');
   protected readonly form = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,
@@ -45,10 +49,22 @@ export class NodeInspectorForm {
       validators: [Validators.required],
     }),
   });
+  private autosaveKey: string | null = null;
 
   constructor() {
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.queueAutosave();
+    });
+
     effect(() => {
       const node = this.selectedNode();
+      const nextAutosaveKey = node ? `node:${node.id}` : null;
+
+      if (this.autosaveKey && this.autosaveKey !== nextAutosaveKey) {
+        this.autosave.cancel(this.autosaveKey);
+      }
+
+      this.autosaveKey = nextAutosaveKey;
 
       if (!node) {
         this.form.reset(
@@ -62,6 +78,7 @@ export class NodeInspectorForm {
         );
         this.selectedPhaseTags.set([]);
         this.form.markAsPristine();
+        this.autosaveStatus.set('idle');
 
         return;
       }
@@ -77,6 +94,7 @@ export class NodeInspectorForm {
       );
       this.selectedPhaseTags.set([...node.phaseTags]);
       this.form.markAsPristine();
+      this.autosaveStatus.set('idle');
     });
   }
 
@@ -92,9 +110,69 @@ export class NodeInspectorForm {
 
       return phaseTags.filter((phase) => phase !== tag);
     });
+
+    this.queueAutosave();
   }
 
   protected saveNode(): void {
+    this.cancelPendingAutosave();
+    void this.persistNode();
+  }
+
+  protected deleteNode(): void {
+    this.cancelPendingAutosave();
+    void this.diagramStore.deleteSelectedNode();
+  }
+
+  private queueAutosave(): void {
+    const node = this.selectedNode();
+
+    if (!node || !this.autosaveKey) {
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.autosave.cancel(this.autosaveKey);
+      this.autosaveStatus.set('idle');
+
+      return;
+    }
+
+    const title = this.form.controls.title.value.trim();
+
+    if (!title) {
+      this.autosave.cancel(this.autosaveKey);
+      this.autosaveStatus.set('idle');
+
+      return;
+    }
+
+    const payload = {
+      title,
+      subtype: this.form.controls.subtype.value.trim(),
+      description: this.form.controls.description.value.trim(),
+      confidence: this.form.controls.confidence.value,
+      phaseTags: this.selectedPhaseTags(),
+    };
+
+    this.autosaveStatus.set('pending');
+    this.autosave.schedule(this.autosaveKey, async () => {
+      this.autosaveStatus.set('saving');
+
+      try {
+        await this.diagramStore.updateNode(node.id, payload);
+
+        if (this.selectedNode()?.id === node.id) {
+          this.form.markAsPristine();
+          this.autosaveStatus.set('saved');
+        }
+      } catch {
+        this.autosaveStatus.set('error');
+      }
+    });
+  }
+
+  private async persistNode(): Promise<void> {
     const node = this.selectedNode();
 
     if (!node) {
@@ -116,16 +194,28 @@ export class NodeInspectorForm {
       return;
     }
 
-    void this.diagramStore.updateNode(node.id, {
-      title,
-      subtype: this.form.controls.subtype.value.trim(),
-      description: this.form.controls.description.value.trim(),
-      confidence: this.form.controls.confidence.value,
-      phaseTags: this.selectedPhaseTags(),
-    });
+    this.autosaveStatus.set('saving');
+
+    try {
+      await this.diagramStore.updateNode(node.id, {
+        title,
+        subtype: this.form.controls.subtype.value.trim(),
+        description: this.form.controls.description.value.trim(),
+        confidence: this.form.controls.confidence.value,
+        phaseTags: this.selectedPhaseTags(),
+      });
+      this.form.markAsPristine();
+      this.autosaveStatus.set('saved');
+    } catch {
+      this.autosaveStatus.set('error');
+    }
   }
 
-  protected deleteNode(): void {
-    void this.diagramStore.deleteSelectedNode();
+  private cancelPendingAutosave(): void {
+    if (!this.autosaveKey) {
+      return;
+    }
+
+    this.autosave.cancel(this.autosaveKey);
   }
 }

@@ -3,6 +3,7 @@ import 'fake-indexeddb/auto';
 import { TestBed } from '@angular/core/testing';
 import Dexie from 'dexie';
 import { IDBKeyRange, indexedDB } from 'fake-indexeddb';
+import type { GraphExportPayload } from '../../models/graph.models';
 
 import { AppDb } from '../app-db';
 import { GraphsRepository } from './graphs-repository';
@@ -133,6 +134,46 @@ describe('GraphsRepository', () => {
     expect(saved?.edges).toHaveLength(0);
     expect(saved?.nodes[0]?.title).toBe('Updated setup lever');
     expect(saved?.graph.updatedAt).not.toBe(source.graph.updatedAt);
+  });
+
+  it('should export a persisted graph as a versioned payload', async () => {
+    const graph = await service.createGraphFromTemplate(
+      'template-2wd-buggy-carpet-baseline',
+    );
+
+    const exported = await service.exportGraph(graph.id);
+
+    expect(exported?.schemaVersion).toBe(1);
+    expect(exported?.graph.id).toBe(graph.id);
+    expect(exported?.nodes.length).toBeGreaterThan(0);
+    expect(exported?.edges.length).toBeGreaterThan(0);
+    expect(exported?.exportTimestamp).toMatch(/^2026|^20/);
+  });
+
+  it('should import an exported graph as a new persisted copy', async () => {
+    const graph = await service.createGraphFromTemplate(
+      'template-2wd-buggy-carpet-baseline',
+    );
+    const exported = await service.exportGraph(graph.id);
+
+    expect(exported).not.toBeNull();
+
+    if (!exported) {
+      throw new Error('Expected an export payload.');
+    }
+
+    const importedGraph = await service.importGraph(exported satisfies GraphExportPayload);
+    const importedDocument = await service.loadGraph(importedGraph.id);
+
+    expect(importedGraph.id).not.toBe(graph.id);
+    expect(importedGraph.name).toContain('Imported');
+    expect(importedDocument?.nodes.length).toBe(exported.nodes.length);
+    expect(importedDocument?.edges.length).toBe(exported.edges.length);
+    expect(
+      importedDocument?.nodes.some((node) =>
+        exported.nodes.some((exportedNode) => exportedNode.id === node.id),
+      ),
+    ).toBe(false);
   });
 
   it('should reject invalid edge directions when saving a graph document', async () => {

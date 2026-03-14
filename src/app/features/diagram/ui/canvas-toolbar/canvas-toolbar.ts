@@ -27,6 +27,7 @@ export class CanvasToolbar {
   readonly fitRequested = output<void>();
   readonly zoomInRequested = output<void>();
   readonly zoomOutRequested = output<void>();
+  readonly importExportRequested = output<void>();
 
   protected readonly controlsDisabled = computed(
     () => !this.hasGraph() || this.busy(),
@@ -54,5 +55,9 @@ export class CanvasToolbar {
     }
 
     this.zoomOutRequested.emit();
+  }
+
+  protected openImportExport(): void {
+    this.importExportRequested.emit();
   }
 }

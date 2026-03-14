@@ -6,6 +6,7 @@
 			[hasGraph]="diagramStore.hasActiveGraph()"
 			[busy]="diagramStore.loading() || diagramStore.mutating()"
 			[statusText]="toolbarStatusText()"
+			(importExportRequested)="openImportExportDialog()"
 			(fitRequested)="requestViewportAction('fit')"
 			(zoomInRequested)="requestViewportAction('zoom-in')"
 			(zoomOutRequested)="requestViewportAction('zoom-out')"
@@ -15,3 +16,11 @@
 
 	<app-right-sidebar></app-right-sidebar>
 </section>
+
+@if (importExportDialogOpen()) {
+	<app-import-export-dialog
+		[graphId]="diagramStore.graph()?.id ?? null"
+		[graphName]="diagramStore.graph()?.name ?? null"
+		(closeRequested)="closeImportExportDialog()"
+	></app-import-export-dialog>
+}

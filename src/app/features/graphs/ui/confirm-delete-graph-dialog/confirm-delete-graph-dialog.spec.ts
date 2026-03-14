@@ -46,4 +46,12 @@ describe('ConfirmDeleteGraphDialog', () => {
     expect(cancelSpy).toHaveBeenCalled();
     expect(confirmSpy).toHaveBeenCalled();
   });
+
+  it('should dismiss on escape', () => {
+    const cancelSpy = vi.spyOn(component.cancelDelete, 'emit');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(cancelSpy).toHaveBeenCalled();
+  });
 });

@@ -1,19 +1,21 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { assertValidGraphDocument } from '../../../features/diagram/data-access/relationship-rules';
+import { GraphJsonIo } from '../../../features/import-export/data-access/graph-json-io';
+import { ImportValidator } from '../../../features/import-export/data-access/import-validator';
 import { TemplatesCatalog } from '../../../features/templates/data-access/templates-catalog';
 import type {
+  GraphExportPayload,
   GraphEdgeRecord,
   GraphNodeRecord,
   GraphRecord,
   PersistedGraphDocument,
   TemplateRecord,
 } from '../../models/graph.models';
+import { GRAPH_SCHEMA_VERSION } from '../../models/graph.models';
 import { AppDb } from '../app-db';
 import { EdgesRepository } from './edges-repository';
 import { NodesRepository } from './nodes-repository';
-
-const CURRENT_SCHEMA_VERSION = 1;
 
 @Injectable({
   providedIn: 'root',
@@ -23,6 +25,8 @@ export class GraphsRepository {
   private readonly nodesRepository = inject(NodesRepository);
   private readonly edgesRepository = inject(EdgesRepository);
   private readonly templatesCatalog = inject(TemplatesCatalog);
+  private readonly graphJsonIo = inject(GraphJsonIo);
+  private readonly importValidator = inject(ImportValidator);
   private readonly platformId = inject(PLATFORM_ID);
 
   private readonly isBrowser = isPlatformBrowser(this.platformId);
@@ -69,7 +73,7 @@ export class GraphsRepository {
       templateId: template.id,
       createdAt: timestamp,
       updatedAt: timestamp,
-      version: CURRENT_SCHEMA_VERSION,
+      version: GRAPH_SCHEMA_VERSION,
     };
 
     const nodes: GraphNodeRecord[] = template.graphData.nodes.map((node) => ({
@@ -241,6 +245,40 @@ export class GraphsRepository {
     );
 
     return graph;
+  }
+
+  async exportGraph(graphId: string): Promise<GraphExportPayload | null> {
+    const document = await this.loadGraph(graphId);
+
+    if (!document) {
+      return null;
+    }
+
+    return this.graphJsonIo.toExportPayload(document);
+  }
+
+  async importGraph(candidate: unknown): Promise<GraphRecord> {
+    const importedDocument = this.importValidator.prepareImport(candidate);
+
+    if (!this.isBrowser) {
+      return importedDocument.graph;
+    }
+
+    assertValidGraphDocument(importedDocument);
+
+    await this.db.transaction(
+      'rw',
+      this.db.graphs,
+      this.db.nodes,
+      this.db.edges,
+      async () => {
+        await this.db.graphs.put(importedDocument.graph);
+        await this.nodesRepository.bulkPut(importedDocument.nodes);
+        await this.edgesRepository.bulkPut(importedDocument.edges);
+      },
+    );
+
+    return importedDocument.graph;
   }
 
   private async ensureTemplatesSeeded(): Promise<void> {

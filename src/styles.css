@@ -2,3 +2,36 @@
 
 @import "tailwindcss";
 @import "ng-diagram/styles.css";
+
+:root {
+	color-scheme: dark;
+	--ngd-colors-acc1-400: #67e8f9;
+	--ngd-colors-acc1-500: #22d3ee;
+	--ngd-colors-acc1-500-40: rgb(34 211 238 / 0.4);
+	--ngd-colors-acc1-500-50: rgb(34 211 238 / 0.5);
+	--ngd-colors-acc1-600: #0891b2;
+	--ngd-colors-acc4-500: #38bdf8;
+}
+
+html[data-theme='dark'] {
+	--ngd-diagram-background-color: #020617;
+	--ngd-node-background-color: rgb(15 23 42 / 0.94);
+	--ngd-node-border-color: rgb(51 65 85 / 0.95);
+	--ngd-node-border-color-hover: rgb(34 211 238 / 0.9);
+	--ngd-node-border-radius: 0.875rem;
+	--ngd-node-border-size: 0.0625rem;
+	--ngd-port-background-color: rgb(15 23 42 / 1);
+	--ngd-port-border-color: rgb(100 116 139 / 1);
+	--ngd-port-background-color-hover: rgb(34 211 238 / 1);
+	--ngd-port-border-color-hover: rgb(240 249 255 / 1);
+	--ngd-selected-node-box-shadow: 0 0 0 0.25rem rgb(34 211 238 / 0.24);
+	--ngd-default-edge-label-bg-primary-default: rgb(15 23 42 / 0.96);
+	--ngd-background-line-minor-color: rgb(30 41 59 / 0.9);
+	--ngd-background-line-major-color: rgb(51 65 85 / 0.9);
+	--ngd-ui-border-color: rgb(30 41 59 / 1);
+	--ngd-shadow: rgb(2 6 23 / 0.45);
+}
+
+body {
+	background: #020617;
+}

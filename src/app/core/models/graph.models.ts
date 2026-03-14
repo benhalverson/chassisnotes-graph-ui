@@ -1,5 +1,7 @@
 export type GraphClassType = '2wd-buggy';
 
+export const GRAPH_SCHEMA_VERSION = 1;
+
 export type GraphSurface = 'carpet';
 
 export type GraphNodeType =
@@ -179,6 +181,14 @@ export interface TemplateRecord {
 }
 
 export interface PersistedGraphDocument {
+  graph: GraphRecord;
+  nodes: GraphNodeRecord[];
+  edges: GraphEdgeRecord[];
+}
+
+export interface GraphExportPayload {
+  schemaVersion: number;
+  exportTimestamp: string;
   graph: GraphRecord;
   nodes: GraphNodeRecord[];
   edges: GraphEdgeRecord[];

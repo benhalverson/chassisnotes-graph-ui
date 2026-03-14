@@ -11,6 +11,9 @@ import {
   templateUrl: './confirm-delete-graph-dialog.html',
   styleUrl: './confirm-delete-graph-dialog.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown.escape)': 'cancelDelete.emit()',
+  },
 })
 export class ConfirmDeleteGraphDialog {
   readonly graphName = input('this graph');

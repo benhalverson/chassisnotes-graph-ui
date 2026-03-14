@@ -120,7 +120,7 @@ class GraphNodeTemplate implements NgDiagramNodeTemplate<DiagramNodeData> {
 
   protected readonly contentClasses = computed(() => {
     return [
-      'relative block min-w-[14rem] max-w-[16rem] rounded-xl px-3 py-3 text-slate-100 transition-opacity',
+      'ng-diagram-port-hoverable-over-node relative block min-w-[14rem] max-w-[16rem] rounded-xl px-3 py-3 text-slate-100 transition-opacity',
       this.node().data.isDimmed ? 'opacity-45' : 'opacity-100',
       this.node().data.isHighlighted
         ? 'ring-1 ring-cyan-400/40'

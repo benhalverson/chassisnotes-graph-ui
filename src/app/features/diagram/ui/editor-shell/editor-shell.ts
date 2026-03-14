@@ -12,12 +12,19 @@ import {
   type CanvasViewportRequest,
 } from '../canvas-toolbar/canvas-toolbar';
 import { DiagramCanvas } from '../diagram-canvas/diagram-canvas';
+import { ImportExportDialog } from '../../../import-export/ui/import-export-dialog/import-export-dialog';
 import { LeftSidebar } from '../left-sidebar/left-sidebar';
 import { RightSidebar } from '../right-sidebar/right-sidebar';
 
 @Component({
   selector: 'app-editor-shell',
-  imports: [LeftSidebar, CanvasToolbar, DiagramCanvas, RightSidebar],
+  imports: [
+    LeftSidebar,
+    CanvasToolbar,
+    DiagramCanvas,
+    RightSidebar,
+    ImportExportDialog,
+  ],
   templateUrl: './editor-shell.html',
   styleUrl: './editor-shell.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +34,7 @@ export class EditorShell {
   protected readonly viewportRequest = signal<CanvasViewportRequest | null>(
     null,
   );
+  protected readonly importExportDialogOpen = signal(false);
   protected readonly toolbarStatusText = computed(() => {
     if (this.diagramStore.loading()) {
       return 'Loading the persisted graph…';
@@ -55,5 +63,13 @@ export class EditorShell {
       id: this.viewportRequestId,
       type,
     });
+  }
+
+  protected openImportExportDialog(): void {
+    this.importExportDialogOpen.set(true);
+  }
+
+  protected closeImportExportDialog(): void {
+    this.importExportDialogOpen.set(false);
   }
 }
