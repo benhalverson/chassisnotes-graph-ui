@@ -30,6 +30,13 @@ const initialState: GraphsState = {
   pendingDeleteGraphId: null,
 };
 
+/**
+ * Library-level state for saved graphs and starter templates.
+ *
+ * This store is used by the graph library UI to list persisted graphs,
+ * create new graphs from templates, duplicate existing graphs, and manage
+ * delete confirmation flow. It does not own the live ngDiagram editor model.
+ */
 export const GraphsStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),

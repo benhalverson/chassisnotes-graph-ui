@@ -16,6 +16,9 @@ describe('GraphEditorPage', () => {
         {
           provide: ActivatedRoute,
           useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({}),
+            },
             paramMap: of(convertToParamMap({})),
           },
         },

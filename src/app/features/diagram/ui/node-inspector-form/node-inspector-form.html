@@ -1,15 +1,101 @@
-<form class="space-y-2 rounded border border-slate-800 bg-slate-900 p-3" aria-label="Node inspector form">
-	<h3 class="text-xs font-semibold uppercase tracking-wide text-slate-300">Node</h3>
-	<label class="block text-xs text-slate-200">
-		Title
-		<input type="text" class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100" />
-	</label>
-	<label class="block text-xs text-slate-200">
-		Confidence
-		<select class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100">
-			<option>Low</option>
-			<option>Medium</option>
-			<option>High</option>
-		</select>
-	</label>
-</form>
+@if (selectedNode(); as node) {
+	<form
+		class="space-y-3 rounded border border-slate-800 bg-slate-900 p-3"
+		[formGroup]="form"
+		(ngSubmit)="saveNode()"
+		aria-label="Node inspector form"
+	>
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-slate-300">Node</h3>
+				<p class="mt-1 text-xs text-slate-500">{{ node.type }} · {{ node.id.slice(0, 8) }}</p>
+			</div>
+			<span class="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+				{{ node.confidence }}
+			</span>
+		</div>
+
+		<label class="block text-xs text-slate-200">
+			Title
+			<input
+				type="text"
+				formControlName="title"
+				class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-100"
+			/>
+		</label>
+		@if (form.controls.title.invalid && form.controls.title.touched) {
+			<p class="text-xs text-rose-300">A node title is required.</p>
+		}
+
+		<label class="block text-xs text-slate-200">
+			Subtype
+			<input
+				type="text"
+				formControlName="subtype"
+				class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-100"
+			/>
+		</label>
+
+		<label class="block text-xs text-slate-200">
+			Description
+			<textarea
+				rows="4"
+				formControlName="description"
+				class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-100"
+			></textarea>
+		</label>
+
+		<label class="block text-xs text-slate-200">
+			Confidence
+			<select
+				formControlName="confidence"
+				class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-100"
+			>
+				@for (confidence of confidenceLevels; track confidence) {
+					<option [value]="confidence">{{ confidence }}</option>
+				}
+			</select>
+		</label>
+
+		<fieldset class="space-y-2">
+			<legend class="text-xs font-medium text-slate-200">Phase tags</legend>
+			<div class="grid grid-cols-2 gap-2">
+				@for (phase of phaseTags; track phase) {
+					<label class="flex items-center gap-2 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200">
+						<input
+							#phaseInput
+							type="checkbox"
+							class="size-3 rounded border-slate-600 bg-slate-900 text-cyan-400"
+							[checked]="hasPhaseTag(phase)"
+							(change)="togglePhaseTag(phase, phaseInput.checked)"
+						/>
+						<span>{{ phase }}</span>
+					</label>
+				}
+			</div>
+		</fieldset>
+
+		<div class="flex gap-2 pt-1">
+			<button
+				type="submit"
+				class="rounded border border-cyan-500/50 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-100 transition hover:border-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+			>
+				Save changes
+			</button>
+			<button
+				type="button"
+				class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-100 transition hover:border-rose-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+				(click)="deleteNode()"
+			>
+				Delete node
+			</button>
+		</div>
+	</form>
+} @else {
+	<section class="rounded border border-dashed border-slate-800 bg-slate-900/60 p-3" aria-label="Node inspector empty state">
+		<h3 class="text-xs font-semibold uppercase tracking-wide text-slate-300">Node</h3>
+		<p class="mt-2 text-xs leading-5 text-slate-400">
+			Select a node on the canvas to edit its metadata.
+		</p>
+	</section>
+}

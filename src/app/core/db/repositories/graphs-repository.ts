@@ -200,6 +200,42 @@ export class GraphsRepository {
     return { graph, nodes, edges };
   }
 
+  async saveGraphDocument(
+    document: PersistedGraphDocument,
+  ): Promise<GraphRecord> {
+    if (!this.isBrowser) {
+      return document.graph;
+    }
+
+    const timestamp = new Date().toISOString();
+    const graph: GraphRecord = {
+      ...document.graph,
+      updatedAt: timestamp,
+    };
+    const nodes: GraphNodeRecord[] = document.nodes.map((node) => ({
+      ...node,
+      graphId: graph.id,
+    }));
+    const edges: GraphEdgeRecord[] = document.edges.map((edge) => ({
+      ...edge,
+      graphId: graph.id,
+    }));
+
+    await this.db.transaction(
+      'rw',
+      this.db.graphs,
+      this.db.nodes,
+      this.db.edges,
+      async () => {
+        await this.db.graphs.put(graph);
+        await this.nodesRepository.replaceForGraph(graph.id, nodes);
+        await this.edgesRepository.replaceForGraph(graph.id, edges);
+      },
+    );
+
+    return graph;
+  }
+
   private async ensureTemplatesSeeded(): Promise<void> {
     if (!this.isBrowser) {
       return;

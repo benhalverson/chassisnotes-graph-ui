@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { DiagramStore } from '../../state/diagram-store';
 import { EdgeInspectorForm } from '../edge-inspector-form/edge-inspector-form';
 import { NodeInspectorForm } from '../node-inspector-form/node-inspector-form';
 
@@ -9,4 +10,6 @@ import { NodeInspectorForm } from '../node-inspector-form/node-inspector-form';
   styleUrl: './inspector-panel.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InspectorPanel {}
+export class InspectorPanel {
+  protected readonly diagramStore = inject(DiagramStore);
+}

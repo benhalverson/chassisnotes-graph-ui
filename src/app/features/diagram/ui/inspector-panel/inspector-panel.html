@@ -1,5 +1,14 @@
 <section class="space-y-3" aria-label="Inspector">
 	<h2 class="text-sm font-semibold text-slate-100">Inspector</h2>
-	<app-node-inspector-form></app-node-inspector-form>
-	<app-edge-inspector-form></app-edge-inspector-form>
+	@if (diagramStore.selectedNode()) {
+		<app-node-inspector-form></app-node-inspector-form>
+	} @else if (diagramStore.selectedEdge()) {
+		<app-edge-inspector-form></app-edge-inspector-form>
+	} @else {
+		<section class="rounded border border-dashed border-slate-800 bg-slate-900/60 p-3" aria-label="Inspector empty state">
+			<p class="text-xs leading-5 text-slate-400">
+				Select a node or edge on the canvas to inspect and edit its details.
+			</p>
+		</section>
+	}
 </section>

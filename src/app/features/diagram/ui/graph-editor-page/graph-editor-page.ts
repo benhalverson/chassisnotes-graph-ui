@@ -17,6 +17,8 @@ export class GraphEditorPage {
   private readonly diagramStore = inject(DiagramStore);
 
   constructor() {
+    this.loadGraphFromRoute(this.route.snapshot.paramMap.get('graphId'));
+
     this.route.paramMap
       .pipe(
         map((params) => params.get('graphId')),
@@ -24,11 +26,17 @@ export class GraphEditorPage {
         takeUntilDestroyed(),
       )
       .subscribe((graphId) => {
-        if (graphId) {
-          void this.diagramStore.loadGraph(graphId);
-        } else {
-          this.diagramStore.clear();
-        }
+        this.loadGraphFromRoute(graphId);
       });
+  }
+
+  private loadGraphFromRoute(graphId: string | null): void {
+    if (graphId) {
+      void this.diagramStore.loadGraph(graphId);
+
+      return;
+    }
+
+    this.diagramStore.clear();
   }
 }

@@ -97,4 +97,41 @@ describe('GraphsRepository', () => {
       db.edges.where('graphId').equals(graph.id).count(),
     ).resolves.toBe(0);
   });
+
+  it('should persist graph document replacements and refresh updatedAt', async () => {
+    const graph = await service.createGraphFromTemplate(
+      'template-2wd-buggy-carpet-baseline',
+    );
+    const source = await service.loadGraph(graph.id);
+
+    expect(source).not.toBeNull();
+
+    if (!source) {
+      throw new Error('Expected a saved graph document.');
+    }
+
+    const node = source.nodes[0];
+
+    expect(node).toBeDefined();
+
+    await service.saveGraphDocument({
+      graph: source.graph,
+      nodes: source.nodes.map((entry, index) =>
+        index === 0
+          ? {
+              ...entry,
+              title: 'Updated setup lever',
+            }
+          : entry,
+      ),
+      edges: [],
+    });
+
+    const saved = await service.loadGraph(graph.id);
+
+    expect(saved?.nodes).toHaveLength(source.nodes.length);
+    expect(saved?.edges).toHaveLength(0);
+    expect(saved?.nodes[0]?.title).toBe('Updated setup lever');
+    expect(saved?.graph.updatedAt).not.toBe(source.graph.updatedAt);
+  });
 });

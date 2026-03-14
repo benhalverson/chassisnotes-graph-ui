@@ -10,6 +10,15 @@ export type GraphNodeType =
   | 'experiment'
   | 'group';
 
+export const GRAPH_NODE_TYPES = [
+  'setup',
+  'symptom',
+  'outcome',
+  'condition',
+  'experiment',
+  'group',
+] as const satisfies readonly GraphNodeType[];
+
 export type GraphPhaseTag =
   | 'entry'
   | 'mid'
@@ -19,7 +28,23 @@ export type GraphPhaseTag =
   | 'braking'
   | 'on-power';
 
+export const GRAPH_PHASE_TAGS = [
+  'entry',
+  'mid',
+  'exit',
+  'bumps',
+  'jumps',
+  'braking',
+  'on-power',
+] as const satisfies readonly GraphPhaseTag[];
+
 export type ConfidenceLevel = 'low' | 'medium' | 'high';
+
+export const CONFIDENCE_LEVELS = [
+  'low',
+  'medium',
+  'high',
+] as const satisfies readonly ConfidenceLevel[];
 
 export type RelationshipType =
   | 'can increase'
@@ -30,7 +55,23 @@ export type RelationshipType =
   | 'tradeoff'
   | 'depends on';
 
+export const RELATIONSHIP_TYPES = [
+  'can increase',
+  'can reduce',
+  'influences',
+  'tested',
+  'observed',
+  'tradeoff',
+  'depends on',
+] as const satisfies readonly RelationshipType[];
+
 export type EvidenceType = 'theory' | 'observed' | 'repeated-test';
+
+export const EVIDENCE_TYPES = [
+  'theory',
+  'observed',
+  'repeated-test',
+] as const satisfies readonly EvidenceType[];
 
 export interface GraphPosition {
   x: number;
