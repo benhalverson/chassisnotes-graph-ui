@@ -1,0 +1,26 @@
+<main class="min-h-screen bg-slate-950 text-slate-100">
+	<section class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
+		<h1 class="text-2xl font-semibold tracking-tight">ChassisNotes Relationships</h1>
+		<p class="text-sm text-slate-300">
+			Create, duplicate, and open your 2WD carpet setup relationship maps.
+		</p>
+
+		<app-graph-library-toolbar></app-graph-library-toolbar>
+
+		<div class="grid gap-4 lg:grid-cols-[2fr_1fr]">
+			<section
+				aria-label="Saved graphs"
+				class="rounded-lg border border-slate-800 bg-slate-900/70 p-3"
+			>
+				<app-graph-list></app-graph-list>
+			</section>
+
+			<section
+				aria-label="Starter templates"
+				class="rounded-lg border border-slate-800 bg-slate-900/70 p-3"
+			>
+				<app-template-picker></app-template-picker>
+			</section>
+		</div>
+	</section>
+</main>

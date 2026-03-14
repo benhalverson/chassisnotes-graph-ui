@@ -1,0 +1,10 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+
+@Component({
+  selector: 'app-graph-library-toolbar',
+  imports: [],
+  templateUrl: './graph-library-toolbar.html',
+  styleUrl: './graph-library-toolbar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class GraphLibraryToolbar {}

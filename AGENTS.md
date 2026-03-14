@@ -53,3 +53,15 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Required reading
+
+Before making changes, read these files in order:
+- `AGENTS.md`
+- `MVP_SPEC.md`
+
+## Priority and conflict resolution
+
+- `AGENTS.md` defines repository-wide engineering rules, Angular conventions, and implementation guardrails.
+- `MVP_SPEC.md` defines the current product requirements, feature scope, domain model, and UI behavior for ChassisNotes Relationships.
+- If the two files conflict, follow `AGENTS.md` for architectural and engineering constraints unless the user explicitly overrides them.
