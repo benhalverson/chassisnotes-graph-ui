@@ -28,7 +28,10 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": []
+              "allowedHosts": [
+                "localhost",
+                "graph-ui.benhalverson.workers.dev"
+              ]
             },
             "ssr": {
               "entry": "src/server.ts",
