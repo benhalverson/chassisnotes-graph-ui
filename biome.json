@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!**/dist"]
+    "includes": ["**", "!!**/dist", "!!worker-configuration.d.ts"]
   },
   "formatter": {
     "enabled": true,
@@ -21,6 +21,11 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "single"
+    }
+  },
+  "html": {
+    "parser": {
+      "interpolation": true
     }
   },
   "assist": {
