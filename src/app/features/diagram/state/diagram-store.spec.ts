@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { DiagramStore } from './diagram-store';
 
 describe('DiagramStore', () => {
-  let service: DiagramStore;
+  let service: InstanceType<typeof DiagramStore>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});

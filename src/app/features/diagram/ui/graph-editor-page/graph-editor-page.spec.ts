@@ -1,4 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { of } from 'rxjs';
 
 import { GraphEditorPage } from './graph-editor-page';
 
@@ -9,6 +12,14 @@ describe('GraphEditorPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [GraphEditorPage],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: of(convertToParamMap({})),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GraphEditorPage);

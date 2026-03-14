@@ -1,4 +1,17 @@
-<div class="space-y-2" role="list" aria-label="Saved graph list">
-	<app-graph-list-item role="listitem"></app-graph-list-item>
-	<app-graph-list-item role="listitem"></app-graph-list-item>
-</div>
+@if (graphs().length) {
+	<div class="space-y-2" role="list" aria-label="Saved graph list">
+		@for (graph of graphs(); track graph.id) {
+			<app-graph-list-item
+				role="listitem"
+				[graph]="graph"
+				(openGraph)="openGraph.emit($event)"
+				(duplicateGraph)="duplicateGraph.emit($event)"
+				(deleteGraph)="deleteGraph.emit($event)"
+			></app-graph-list-item>
+		}
+	</div>
+} @else {
+	<div class="rounded-md border border-dashed border-slate-700 bg-slate-950/40 px-4 py-8 text-center text-sm text-slate-400">
+		Create a graph from a starter template to seed your first tuning map.
+	</div>
+}

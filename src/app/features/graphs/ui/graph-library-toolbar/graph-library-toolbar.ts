@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
 
 @Component({
   selector: 'app-graph-library-toolbar',
@@ -7,4 +12,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrl: './graph-library-toolbar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GraphLibraryToolbar {}
+export class GraphLibraryToolbar {
+  readonly defaultTemplateLabel = input('starter template');
+  readonly createRequested = output<void>();
+}

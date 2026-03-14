@@ -1,1 +1,24 @@
-<p>confirm-delete-graph-dialog works!</p>
+<section class="fixed inset-0 z-20 grid place-items-center bg-slate-950/70 p-4" aria-modal="true" role="alertdialog" aria-labelledby="delete-graph-title" aria-describedby="delete-graph-description">
+	<div class="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900 p-4 shadow-2xl">
+		<h2 id="delete-graph-title" class="text-base font-semibold text-slate-100">Delete graph?</h2>
+		<p id="delete-graph-description" class="mt-2 text-sm text-slate-300">
+			Delete <span class="font-medium text-slate-100">{{ graphName() }}</span>? This removes the graph and its saved nodes and edges from IndexedDB.
+		</p>
+		<div class="mt-4 flex justify-end gap-2">
+			<button
+				type="button"
+				(click)="cancelDelete.emit()"
+				class="rounded border border-slate-700 px-3 py-2 text-sm text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
+			>
+				Cancel
+			</button>
+			<button
+				type="button"
+				(click)="confirmDelete.emit()"
+				class="rounded border border-red-500/40 bg-red-500/15 px-3 py-2 text-sm font-medium text-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-300"
+			>
+				Delete graph
+			</button>
+		</div>
+	</div>
+</section>

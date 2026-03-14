@@ -5,22 +5,47 @@
 			Create, duplicate, and open your 2WD carpet setup relationship maps.
 		</p>
 
-		<app-graph-library-toolbar></app-graph-library-toolbar>
+		@if (graphsStore.error(); as errorMessage) {
+			<p class="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+				{{ errorMessage }}
+			</p>
+		}
+
+		<app-graph-library-toolbar
+			[defaultTemplateLabel]="graphsStore.templates().length ? graphsStore.defaultTemplate().name : 'starter template'"
+			(createRequested)="createFromDefaultTemplate()"
+		></app-graph-library-toolbar>
 
 		<div class="grid gap-4 lg:grid-cols-[2fr_1fr]">
 			<section
 				aria-label="Saved graphs"
 				class="rounded-lg border border-slate-800 bg-slate-900/70 p-3"
 			>
-				<app-graph-list></app-graph-list>
+				<app-graph-list
+					[graphs]="graphsStore.graphs()"
+					(openGraph)="openGraph($event)"
+					(duplicateGraph)="duplicateGraph($event)"
+					(deleteGraph)="graphsStore.requestDelete($event)"
+				></app-graph-list>
 			</section>
 
 			<section
 				aria-label="Starter templates"
 				class="rounded-lg border border-slate-800 bg-slate-900/70 p-3"
 			>
-				<app-template-picker></app-template-picker>
+				<app-template-picker
+					[templates]="graphsStore.templates()"
+					(createFromTemplate)="createFromTemplate($event)"
+				></app-template-picker>
 			</section>
 		</div>
 	</section>
+
+	@if (graphsStore.pendingDeleteGraph(); as pendingDeleteGraph) {
+		<app-confirm-delete-graph-dialog
+			[graphName]="pendingDeleteGraph.name"
+			(confirmDelete)="graphsStore.confirmDelete()"
+			(cancelDelete)="graphsStore.cancelDelete()"
+		></app-confirm-delete-graph-dialog>
+	}
 </main>

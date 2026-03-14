@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
+import type { TemplateRecord } from '../../../../core/models/graph.models';
 
 @Component({
   selector: 'app-template-picker',
@@ -7,4 +13,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrl: './template-picker.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TemplatePicker {}
+export class TemplatePicker {
+  readonly templates = input<TemplateRecord[]>([]);
+  readonly createFromTemplate = output<string>();
+}

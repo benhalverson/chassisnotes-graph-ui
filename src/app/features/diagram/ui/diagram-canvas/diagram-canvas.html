@@ -1,6 +1,31 @@
 <section
-	class="grid min-h-[55dvh] place-items-center rounded-lg border border-dashed border-slate-700 bg-slate-900/40"
+	class="flex min-h-[55dvh] flex-1 flex-col overflow-hidden rounded-lg border border-slate-800 bg-slate-900/70"
 	aria-label="Diagram canvas"
 >
-	<p class="text-sm text-slate-300">ngDiagram canvas integration placeholder</p>
+	<header class="border-b border-slate-800 px-4 py-3">
+		<h2 class="text-sm font-semibold tracking-wide text-slate-100">{{ graphTitle() }}</h2>
+		<p class="mt-1 text-xs text-slate-400">
+			Persisted ngDiagram workspace for the current RC tuning relationship map.
+		</p>
+	</header>
+
+	@if (isBrowser) {
+		@if (diagramStore.loading()) {
+			<div class="grid min-h-[32rem] flex-1 place-items-center bg-slate-950/30 p-6 text-center text-sm text-slate-300">
+				<p>Loading persisted graph…</p>
+			</div>
+		} @else if (diagramStore.model(); as activeModel) {
+			<div class="min-h-[32rem] flex-1 bg-slate-950/40 p-3">
+				<ng-diagram class="block h-full min-h-[30rem] w-full rounded-md border border-slate-800 bg-slate-950" [model]="activeModel" />
+			</div>
+		} @else {
+			<div class="grid min-h-[32rem] flex-1 place-items-center bg-slate-950/30 p-6 text-center text-sm text-slate-300">
+				<p>{{ diagramStore.error() ?? 'Select or create a graph from the library to begin.' }}</p>
+			</div>
+		}
+	} @else {
+		<div class="grid min-h-[32rem] flex-1 place-items-center bg-slate-950/30 p-6 text-center text-sm text-slate-300">
+			<p>The diagram workspace renders in the browser after hydration.</p>
+		</div>
+	}
 </section>

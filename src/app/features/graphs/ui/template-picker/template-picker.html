@@ -1,15 +1,17 @@
 <div class="space-y-3">
 	<h2 class="text-sm font-semibold text-slate-100">Starter templates</h2>
-	<button
-		type="button"
-		class="block w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-sm text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
-	>
-		2WD Buggy Carpet Baseline
-	</button>
-	<button
-		type="button"
-		class="block w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-sm text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
-	>
-		Symptom-Driven Troubleshooting Map
-	</button>
+	@if (templates().length) {
+		@for (template of templates(); track template.id) {
+			<button
+				type="button"
+				(click)="createFromTemplate.emit(template.id)"
+				class="block w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-sm text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
+			>
+				<span class="block font-medium">{{ template.name }}</span>
+				<span class="mt-1 block text-xs text-slate-400">{{ template.description }}</span>
+			</button>
+		}
+	} @else {
+		<p class="text-sm text-slate-400">Starter templates will appear here after initialization.</p>
+	}
 </div>
