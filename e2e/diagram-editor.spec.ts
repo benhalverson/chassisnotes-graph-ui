@@ -1,30 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
-
-const DATABASE_NAME = 'chassisnotes_relationships';
-
-async function resetApp(page: Page): Promise<void> {
-  await page.goto('/');
-  await page.evaluate(async (databaseName: string) => {
-    await new Promise<void>((resolve) => {
-      const request = indexedDB.deleteDatabase(databaseName);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => resolve();
-      request.onblocked = () => resolve();
-    });
-  }, DATABASE_NAME);
-  await page.reload();
-}
-
-async function createBaselineGraph(page: Page): Promise<void> {
-  await page
-    .getByRole('button', { name: /Create 2WD Buggy Carpet Baseline/i })
-    .click();
-  await expect(page).toHaveURL(/\/graphs\//);
-  await expect(
-    page.getByRole('heading', { name: '2WD Buggy Carpet Baseline' }),
-  ).toBeVisible();
-}
+import { expect, test } from '@playwright/test';
+import { createBaselineGraph, resetApp } from './test-helpers';
 
 test.beforeEach(async ({ page }) => {
   await resetApp(page);
