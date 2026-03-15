@@ -6,12 +6,12 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import type {
   GraphRecord,
   PersistedGraphDocument,
   TemplateRecord,
 } from '../../../../core/models/graph.models';
-import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 
 @Component({
   selector: 'app-today-page',
@@ -49,7 +49,9 @@ export class TodayPage {
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
       .slice(0, 3),
   );
-  protected readonly recentSessions = computed(() => this.recentSessionGraphs().slice(0, 3));
+  protected readonly recentSessions = computed(() =>
+    this.recentSessionGraphs().slice(0, 3),
+  );
 
   constructor() {
     void this.loadDashboard();
@@ -86,7 +88,9 @@ export class TodayPage {
     }).format(new Date(updatedAt));
   }
 
-  private async navigateToQuickAdd(nodeType: 'experiment' | 'symptom'): Promise<void> {
+  private async navigateToQuickAdd(
+    nodeType: 'experiment' | 'symptom',
+  ): Promise<void> {
     const graphId = await this.ensureActiveGraphId();
 
     if (!graphId) {

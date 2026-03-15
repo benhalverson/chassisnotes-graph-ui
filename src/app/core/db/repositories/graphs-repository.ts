@@ -58,7 +58,9 @@ export class GraphsRepository {
       return null;
     }
 
-    const preference = await this.db.preferences.get(this.activeGraphPreferenceKey);
+    const preference = await this.db.preferences.get(
+      this.activeGraphPreferenceKey,
+    );
 
     return preference?.value ?? null;
   }

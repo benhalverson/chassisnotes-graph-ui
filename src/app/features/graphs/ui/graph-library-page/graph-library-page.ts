@@ -1,7 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import type { GraphRecord } from '../../../../core/models/graph.models';
 import { GraphsStore } from '../../state/graphs-store';
@@ -28,14 +32,14 @@ export class GraphLibraryPage {
 
   private readonly router = inject(Router);
   protected readonly title = toSignal(
-    this.route.data.pipe(map((data) => (data['title'] as string) ?? 'Graphs')),
+    this.route.data.pipe(map((data) => (data.title as string) ?? 'Graphs')),
     { initialValue: 'Graphs' },
   );
   protected readonly description = toSignal(
     this.route.data.pipe(
       map(
         (data) =>
-          (data['description'] as string) ??
+          (data.description as string) ??
           'Create, duplicate, and open your 2WD carpet setup relationship maps.',
       ),
     ),
@@ -45,7 +49,9 @@ export class GraphLibraryPage {
     },
   );
   protected readonly mode = toSignal(
-    this.route.data.pipe(map((data) => (data['mode'] as 'graphs' | 'garage') ?? 'graphs')),
+    this.route.data.pipe(
+      map((data) => (data.mode as 'graphs' | 'garage') ?? 'graphs'),
+    ),
     { initialValue: 'graphs' },
   );
 
@@ -53,8 +59,8 @@ export class GraphLibraryPage {
     void this.graphsStore.loadLibrary();
   }
 
-  protected readonly savedCars = computed(
-    () => this.computeSavedCars(this.graphsStore.graphs()),
+  protected readonly savedCars = computed(() =>
+    this.computeSavedCars(this.graphsStore.graphs()),
   );
 
   protected readonly pastSessions = () => this.graphsStore.graphs().slice(0, 4);
@@ -112,14 +118,17 @@ export class GraphLibraryPage {
     graphCount: number;
     latestUpdatedAt: string;
   }> {
-    const cars = new Map<string, {
-      id: string;
-      chassis: string;
-      classType: string;
-      surface: string;
-      graphCount: number;
-      latestUpdatedAt: string;
-    }>();
+    const cars = new Map<
+      string,
+      {
+        id: string;
+        chassis: string;
+        classType: string;
+        surface: string;
+        graphCount: number;
+        latestUpdatedAt: string;
+      }
+    >();
 
     for (const graph of graphs) {
       const key = `${graph.chassis}:${graph.classType}:${graph.surface}`;
