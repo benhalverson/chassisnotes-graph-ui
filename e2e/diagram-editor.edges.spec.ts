@@ -16,8 +16,12 @@ test('opens the import/export dialog from the editor and closes it with Escape',
     name: 'Import / Export graph JSON',
   });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Download JSON' })).toBeEnabled();
-  await expect(dialog.getByRole('button', { name: 'Download PNG' })).toBeEnabled();
+  await expect(
+    dialog.getByRole('button', { name: 'Download JSON' }),
+  ).toBeEnabled();
+  await expect(
+    dialog.getByRole('button', { name: 'Download PNG' }),
+  ).toBeEnabled();
 
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();

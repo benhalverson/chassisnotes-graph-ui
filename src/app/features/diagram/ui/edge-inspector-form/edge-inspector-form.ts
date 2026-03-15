@@ -61,7 +61,9 @@ export class EdgeInspectorForm {
   protected readonly phaseTags = GRAPH_PHASE_TAGS;
   protected readonly selectedPhaseTags = signal<GraphPhaseTag[]>([]);
   protected readonly phaseTagsDirty = signal(false);
-  protected readonly autosaveStatus = signal<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle');
+  protected readonly autosaveStatus = signal<
+    'idle' | 'pending' | 'saving' | 'saved' | 'error'
+  >('idle');
   protected readonly form = new FormGroup({
     relationshipType: new FormControl<RelationshipType>('influences', {
       nonNullable: true,
@@ -179,7 +181,12 @@ export class EdgeInspectorForm {
   private queueAutosave(): void {
     const edge = this.selectedEdge();
 
-    if (!edge || !this.autosaveKey || this.form.invalid || !this.hasUnsavedChanges()) {
+    if (
+      !edge ||
+      !this.autosaveKey ||
+      this.form.invalid ||
+      !this.hasUnsavedChanges()
+    ) {
       return;
     }
 

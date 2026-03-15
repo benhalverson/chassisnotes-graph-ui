@@ -2,11 +2,11 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  PLATFORM_ID,
   computed,
   inject,
   input,
   output,
+  PLATFORM_ID,
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';

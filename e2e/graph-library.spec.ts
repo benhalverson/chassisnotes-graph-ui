@@ -20,7 +20,10 @@ test('creates a graph from the troubleshooting template and reopens it from the 
   await expect(page.getByLabel('Entry push')).toBeVisible();
   await returnToLibrary(page);
 
-  const graphCard = getSavedGraphCard(page, 'Symptom-Driven Troubleshooting Map');
+  const graphCard = getSavedGraphCard(
+    page,
+    'Symptom-Driven Troubleshooting Map',
+  );
   await expect(graphCard).toBeVisible();
 
   await openGraphFromLibrary(page, 'Symptom-Driven Troubleshooting Map');
@@ -37,7 +40,7 @@ test('duplicates a saved graph and confirms delete flows from the library', asyn
   await originalCard.getByRole('button', { name: 'Duplicate' }).click();
   await expect(page).toHaveURL(/\/graphs\//);
   await expect(
-    page.getByRole('heading', { name: '2WD Buggy Carpet Baseline Copy' }),
+    page.getByRole('heading', { name: '2WD Buggy Carpet Baseline Copy' }).first(),
   ).toBeVisible();
 
   await returnToLibrary(page);

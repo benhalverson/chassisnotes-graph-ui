@@ -14,9 +14,7 @@ export async function resetApp(page: Page): Promise<void> {
     });
   }, DATABASE_NAME);
   await page.reload();
-  await expect(
-    page.getByRole('heading', { name: 'ChassisNotes Relationships' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Graphs' })).toBeVisible();
 }
 
 export async function createBaselineGraph(page: Page): Promise<void> {
@@ -50,11 +48,11 @@ export async function openGraphFromLibrary(
 }
 
 export async function returnToLibrary(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/graphs');
+  await expect(page.getByRole('heading', { name: 'Graphs' })).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'ChassisNotes Relationships' }),
+    page.getByRole('region', { name: 'Saved graphs' }),
   ).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Saved graphs' })).toBeVisible();
 }
 
 export function getSavedGraphCard(page: Page, graphName: string): Locator {
@@ -71,7 +69,9 @@ export async function expectEditorLoaded(
   graphName: string,
 ): Promise<void> {
   await expect(page).toHaveURL(/\/graphs\//);
-  await expect(page.getByRole('heading', { name: graphName })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: graphName, exact: true }).first(),
+  ).toBeVisible();
   await expect(page.getByLabel('Diagram canvas')).toBeVisible();
   await expect(
     page.getByRole('toolbar', { name: 'Canvas actions' }),

@@ -1,0 +1,29 @@
+<nav
+	class="flex items-center gap-1 border-b border-slate-800 bg-slate-950 px-4 py-2"
+	aria-label="Main navigation"
+>
+	<a
+		routerLink="/graphs"
+		class="mr-4 flex items-center gap-2 text-sm font-semibold tracking-tight text-slate-100"
+		aria-label="ChassisNotes Relationships"
+	>
+		<span
+			class="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500 text-xs font-bold text-slate-950"
+			aria-hidden="true"
+			>CN</span
+		>
+		<span class="hidden sm:inline">ChassisNotes</span>
+		<span class="hidden text-slate-400 sm:inline">Relationships</span>
+	</a>
+
+	@for (link of navLinks; track link.path) {
+		<a
+			[routerLink]="link.path"
+			routerLinkActive="bg-slate-800 !text-slate-50"
+			[routerLinkActiveOptions]="{ exact: link.exact }"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200"
+		>
+			{{ link.label }}
+		</a>
+	}
+</nav>

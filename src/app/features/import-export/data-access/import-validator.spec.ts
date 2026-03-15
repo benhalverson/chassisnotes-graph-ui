@@ -93,7 +93,9 @@ describe('ImportValidator', () => {
     expect(imported.graph.id).not.toBe(payload.graph.id);
     expect(imported.graph.name).toBe('Baseline map Imported');
     expect(imported.graph.createdAt).toBe('2026-03-15T00:00:00.000Z');
-    expect(imported.nodes.every((node) => node.graphId === imported.graph.id)).toBe(true);
+    expect(
+      imported.nodes.every((node) => node.graphId === imported.graph.id),
+    ).toBe(true);
     expect(imported.edges[0]?.sourceNodeId).toBe(imported.nodes[0]?.id);
     expect(imported.edges[0]?.targetNodeId).toBe(imported.nodes[1]?.id);
   });
