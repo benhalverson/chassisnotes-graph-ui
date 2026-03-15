@@ -317,6 +317,96 @@ Result: Strong improvement
 
 ---
 
+# Milestone 10 — CI/CD Setup with GitHub Actions
+
+## Goal
+
+Introduce reliable CI/CD quality gates with GitHub Actions so changes are automatically validated before merging.
+
+## Problems Being Solved
+
+Current workflow:
+
+Local commands only
+
+Issues:
+- No automated validation on pull requests
+- Regressions can merge without lint, unit, or e2e coverage running
+- Team quality checks depend on each developer remembering to run scripts locally
+
+## Required Features
+
+### GitHub Actions
+
+Add three separate GitHub Actions workflows:
+
+- Linting
+- Unit tests
+- E2E tests
+
+### Linting Workflow
+
+Runs:
+
+- `pnpm run lint:ci`
+
+Behavior:
+
+- Reports failures in GitHub Actions
+- Must not be configured as a required merge check
+
+### Unit Test Workflow
+
+Runs:
+
+- `pnpm run test:ci`
+
+Behavior:
+
+- Executes on pull requests and pushes
+- Must be configured as a required merge check
+
+### E2E Test Workflow
+
+Runs:
+
+- `pnpm run e2e`
+
+Behavior:
+
+- Installs Playwright browser dependencies
+- Starts the Angular app through the existing Playwright configuration
+- Must be configured as a required merge check
+
+### Merge Policy
+
+Branch protection on `main` must require:
+
+- Unit tests
+- E2E tests
+
+Branch protection on `main` must not require:
+
+- Linting
+
+## Deliverables
+
+- GitHub Actions workflow for linting
+- GitHub Actions workflow for unit tests
+- GitHub Actions workflow for e2e tests
+- Documented merge policy for required and optional checks
+
+## Acceptance Criteria
+
+- Pull requests automatically run lint, unit, and e2e workflows
+- `pnpm run lint:ci` runs in GitHub Actions and reports failures without being required for merge
+- `pnpm run test:ci` runs in GitHub Actions and can be marked as a required check
+- `pnpm run e2e` runs in GitHub Actions with Playwright browser installation and can be marked as a required check
+- Workflow setup uses pnpm consistently with the repository package manager
+- A maintainer can configure branch protection so only the unit and e2e checks block merges
+
+---
+
 # Long Term Vision
 
 After Milestone 9 the application becomes a tuning knowledge system.
