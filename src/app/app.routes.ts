@@ -7,6 +7,13 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'today',
+    loadComponent: () =>
+      import('./features/today/ui/today-page/today-page').then(
+        (m) => m.TodayPage,
+      ),
+  },
+  {
     path: 'graphs',
     children: [
       {
@@ -15,6 +22,12 @@ export const routes: Routes = [
           import(
             './features/graphs/ui/graph-library-page/graph-library-page'
           ).then((m) => m.GraphLibraryPage),
+        data: {
+          title: 'Graphs',
+          description:
+            'Create, duplicate, and open your 2WD carpet setup relationship maps.',
+          mode: 'graphs',
+        },
       },
       {
         path: ':graphId',
@@ -26,20 +39,48 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'garage',
+    loadComponent: () =>
+      import('./features/graphs/ui/graph-library-page/graph-library-page').then(
+        (m) => m.GraphLibraryPage,
+      ),
+    data: {
+      title: 'Garage',
+      description:
+        'Keep your saved graphs and starter templates within easy reach between runs.',
+      mode: 'garage',
+    },
+  },
+  {
+    path: 'map',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/map/ui/map-home-page/map-home-page').then(
+            (m) => m.MapHomePage,
+          ),
+      },
+      {
+        path: ':graphId',
+        loadComponent: () =>
+          import('./features/map/ui/map-home-page/map-home-page').then(
+            (m) => m.MapHomePage,
+          ),
+      },
+    ],
+  },
+  {
     path: 'diagnose',
     loadComponent: () =>
-      import('./features/shell/placeholder-page/placeholder-page').then(
-        (m) => m.PlaceholderPage,
+      import('./features/diagnose/ui/diagnose-page/diagnose-page').then(
+        (m) => m.DiagnosePage,
       ),
-    data: { title: 'Diagnose' },
   },
   {
     path: 'templates',
-    loadComponent: () =>
-      import('./features/shell/placeholder-page/placeholder-page').then(
-        (m) => m.PlaceholderPage,
-      ),
-    data: { title: 'Templates' },
+    redirectTo: 'garage',
+    pathMatch: 'full',
   },
   {
     path: '**',

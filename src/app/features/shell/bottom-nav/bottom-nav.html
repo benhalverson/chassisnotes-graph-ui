@@ -1,0 +1,20 @@
+<nav
+	class="fixed inset-x-0 bottom-0 z-50 border-t border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur lg:hidden"
+	aria-label="Primary mobile navigation"
+>
+	<div class="mx-auto grid max-w-md grid-cols-4 gap-2">
+		@for (link of navLinks; track link.path) {
+			<a
+				[routerLink]="link.path"
+				class="flex min-h-14 flex-col items-center justify-center rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors"
+				[class.bg-amber-500]="isActive(link.path)"
+				[class.text-slate-950]="isActive(link.path)"
+				[class.text-slate-400]="!isActive(link.path)"
+				[class.hover:bg-slate-800]="!isActive(link.path)"
+				[attr.aria-current]="isActive(link.path) ? 'page' : null"
+			>
+				<span>{{ link.label }}</span>
+			</a>
+		}
+	</div>
+</nav>

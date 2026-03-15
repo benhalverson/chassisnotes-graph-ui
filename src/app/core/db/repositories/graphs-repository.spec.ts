@@ -29,6 +29,7 @@ describe('GraphsRepository', () => {
       db.nodes.clear(),
       db.edges.clear(),
       db.templates.clear(),
+      db.preferences.clear(),
     ]);
   });
 
@@ -56,6 +57,27 @@ describe('GraphsRepository', () => {
     expect(loadedGraph?.graph.id).toBe(graph.id);
     expect(loadedGraph?.nodes.length).toBeGreaterThan(0);
     expect(loadedGraph?.edges.length).toBeGreaterThan(0);
+    await expect(service.getActiveGraphId()).resolves.toBe(graph.id);
+  });
+
+  it('should resolve and load the active graph', async () => {
+    const olderGraph = await service.createGraphFromTemplate(
+      'template-2wd-buggy-carpet-baseline',
+    );
+    const activeGraph = await service.createGraphFromTemplate(
+      'template-symptom-driven-troubleshooting',
+    );
+
+    await service.setActiveGraphId(olderGraph.id);
+
+    await expect(service.resolveActiveGraphId()).resolves.toBe(olderGraph.id);
+    await expect(service.loadActiveGraph()).resolves.toMatchObject({
+      graph: { id: olderGraph.id },
+    });
+
+    await service.setActiveGraphId('missing-graph');
+
+    await expect(service.resolveActiveGraphId()).resolves.toBe(activeGraph.id);
   });
 
   it('should duplicate a graph with new graph, node, and edge ids', async () => {

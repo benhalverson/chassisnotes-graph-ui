@@ -1,0 +1,67 @@
+<main class="min-h-screen bg-slate-950 text-slate-100">
+	<section class="mx-auto flex w-full max-w-4xl flex-col gap-4 p-4 md:p-6">
+		<header class="space-y-2">
+			<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">
+				Diagnose
+			</p>
+			<h1 class="text-3xl font-semibold tracking-tight">Find the next setup direction</h1>
+			<p class="max-w-2xl text-sm text-slate-300">
+				Capture where the car feels wrong, then review a compact set of likely adjustments before opening the map.
+			</p>
+		</header>
+
+		<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+			<h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Corner phase</h2>
+			<div class="mt-3 flex flex-wrap gap-2">
+				@for (phase of phaseOptions; track phase.id) {
+					<button
+						type="button"
+						class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+						[class.border-amber-400]="selectedPhase() === phase.id"
+						[class.bg-amber-500]="selectedPhase() === phase.id"
+						[class.text-slate-950]="selectedPhase() === phase.id"
+						[class.border-slate-700]="selectedPhase() !== phase.id"
+						[class.text-slate-200]="selectedPhase() !== phase.id"
+						(click)="selectedPhase.set(phase.id)"
+					>
+						{{ phase.label }}
+					</button>
+				}
+			</div>
+		</section>
+
+		<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+			<h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">What does the car do?</h2>
+			<div class="mt-3 grid gap-2 sm:grid-cols-2">
+				@for (symptom of symptomOptions; track symptom.id) {
+					<button
+						type="button"
+						class="rounded-2xl border px-4 py-3 text-left transition-colors"
+						[class.border-amber-400]="selectedSymptom() === symptom.id"
+						[class.bg-amber-500/10]="selectedSymptom() === symptom.id"
+						[class.border-slate-800]="selectedSymptom() !== symptom.id"
+						[class.bg-slate-950/40]="selectedSymptom() !== symptom.id"
+						(click)="selectedSymptom.set(symptom.id)"
+					>
+						<span class="text-sm font-semibold text-slate-100">{{ symptom.label }}</span>
+						<span class="mt-1 block text-sm text-slate-400">Phase focus: {{ phaseLabel() }}</span>
+					</button>
+				}
+			</div>
+		</section>
+
+		<section class="grid gap-3 lg:grid-cols-2">
+			@for (suggestion of suggestions(); track suggestion.title) {
+				<article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+					<div class="flex items-center justify-between gap-2">
+						<h2 class="text-lg font-semibold tracking-tight">{{ suggestion.title }}</h2>
+						<span class="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
+							{{ suggestion.confidence }}
+						</span>
+					</div>
+					<p class="mt-3 text-sm text-slate-300">{{ suggestion.note }}</p>
+				</article>
+			}
+		</section>
+	</section>
+</main>

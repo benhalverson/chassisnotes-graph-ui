@@ -8,6 +8,24 @@
 		<p class="mt-1 text-xs leading-5 text-slate-400" aria-live="polite">{{ statusText() }}</p>
 	</div>
 
+	<div class="grid grid-cols-2 gap-2 lg:hidden">
+		<button
+			type="button"
+			class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+			(click)="openMobilePalette()"
+		>
+			Palette + Filters
+		</button>
+		<button
+			type="button"
+			[disabled]="!hasSelection()"
+			class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition enabled:hover:border-slate-500 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-cyan-400 enabled:focus-visible:ring-offset-2 enabled:focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+			(click)="openMobileInspector()"
+		>
+			Inspector
+		</button>
+	</div>
+
 	<div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
 		<button
 			type="button"

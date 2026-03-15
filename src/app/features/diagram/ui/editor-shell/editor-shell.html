@@ -2,17 +2,25 @@
 	[graphTitle]="diagramStore.graphTitle()"
 	[saveStatus]="saveStatus()"
 	[lastSavedAt]="lastSavedAt()"
+	[backLink]="backLink()"
+	[backLabel]="backLabel()"
+	[backAriaLabel]="backAriaLabel()"
 ></app-editor-context-header>
 
 <section class="grid min-h-[calc(100vh-5rem)] gap-3 p-3 lg:grid-cols-[18rem_1fr_20rem] lg:p-4">
-	<app-left-sidebar></app-left-sidebar>
+	<div class="hidden lg:block">
+		<app-left-sidebar></app-left-sidebar>
+	</div>
 
 	<section class="flex min-h-[60dvh] flex-col gap-3" aria-label="Diagram workspace">
 		<app-canvas-toolbar
 			[hasGraph]="diagramStore.hasActiveGraph()"
+			[hasSelection]="hasSelection()"
 			[busy]="diagramStore.loading() || diagramStore.mutating()"
 			[statusText]="toolbarStatusText()"
 			(importExportRequested)="openImportExportDialog()"
+			(mobilePaletteRequested)="openMobilePalette()"
+			(mobileInspectorRequested)="openMobileInspector()"
 			(fitRequested)="requestViewportAction('fit')"
 			(zoomInRequested)="requestViewportAction('zoom-in')"
 			(zoomOutRequested)="requestViewportAction('zoom-out')"
@@ -20,8 +28,60 @@
 		<app-diagram-canvas [viewportAction]="viewportRequest()"></app-diagram-canvas>
 	</section>
 
-	<app-right-sidebar></app-right-sidebar>
+	<div class="hidden lg:block">
+		<app-right-sidebar></app-right-sidebar>
+	</div>
 </section>
+
+@if (activeMobileSheet() === 'palette') {
+	<div class="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden" (click)="closeMobileSheet()" aria-hidden="true"></div>
+	<section
+		class="fixed inset-x-3 bottom-20 z-50 max-h-[70dvh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 p-3 shadow-2xl lg:hidden"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Palette and filters"
+	>
+		<div class="mb-3 flex items-center justify-between gap-3">
+			<div>
+				<h2 class="text-sm font-semibold text-slate-100">Palette and filters</h2>
+				<p class="mt-1 text-xs text-slate-400">Add a node or narrow the current relationship map.</p>
+			</div>
+			<button
+				type="button"
+				class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100"
+				(click)="closeMobileSheet()"
+			>
+				Close
+			</button>
+		</div>
+		<app-left-sidebar></app-left-sidebar>
+	</section>
+}
+
+@if (activeMobileSheet() === 'inspector') {
+	<div class="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden" (click)="closeMobileSheet()" aria-hidden="true"></div>
+	<section
+		class="fixed inset-x-3 bottom-20 z-50 max-h-[70dvh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 p-3 shadow-2xl lg:hidden"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Inspector"
+	>
+		<div class="mb-3 flex items-center justify-between gap-3">
+			<div>
+				<h2 class="text-sm font-semibold text-slate-100">Inspector</h2>
+				<p class="mt-1 text-xs text-slate-400">Review the selected node or edge details without leaving the canvas.</p>
+			</div>
+			<button
+				type="button"
+				class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100"
+				(click)="closeMobileSheet()"
+			>
+				Close
+			</button>
+		</div>
+		<app-right-sidebar></app-right-sidebar>
+	</section>
+}
 
 @if (importExportDialogOpen()) {
 	<app-import-export-dialog

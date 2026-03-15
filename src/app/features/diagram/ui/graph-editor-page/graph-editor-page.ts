@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
+import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import { DiagramStore } from '../../state/diagram-store';
 import { EditorShell } from '../editor-shell/editor-shell';
 
@@ -15,6 +16,7 @@ import { EditorShell } from '../editor-shell/editor-shell';
 export class GraphEditorPage {
   private readonly route = inject(ActivatedRoute);
   private readonly diagramStore = inject(DiagramStore);
+  private readonly graphsRepository = inject(GraphsRepository);
 
   constructor() {
     this.loadGraphFromRoute(this.route.snapshot.paramMap.get('graphId'));
@@ -32,6 +34,7 @@ export class GraphEditorPage {
 
   private loadGraphFromRoute(graphId: string | null): void {
     if (graphId) {
+      void this.graphsRepository.setActiveGraphId(graphId);
       void this.diagramStore.loadGraph(graphId);
 
       return;
