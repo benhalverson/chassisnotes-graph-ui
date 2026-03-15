@@ -42,9 +42,9 @@ export class ImportValidator {
       'exportTimestamp',
       errors,
     );
-    const graph = readGraphRecord(candidate.graph, 'graph', errors);
-    const nodes = readNodeRecords(candidate.nodes, 'nodes', errors);
-    const edges = readEdgeRecords(candidate.edges, 'edges', errors);
+    const graph = readGraphRecord(candidate['graph'], 'graph', errors);
+    const nodes = readNodeRecords(candidate['nodes'], 'nodes', errors);
+    const edges = readEdgeRecords(candidate['edges'], 'edges', errors);
 
     if (schemaVersion !== GRAPH_SCHEMA_VERSION) {
       errors.push(
@@ -273,9 +273,9 @@ function readNodeRecord(
       `${path}.confidence`,
       errors,
     ) as GraphNodeRecord['confidence'],
-    position: readPosition(candidate.position, `${path}.position`, errors),
-    size: readOptionalSize(candidate.size, `${path}.size`, errors),
-    data: readDataRecord(candidate.data, `${path}.data`, errors),
+    position: readPosition(candidate['position'], `${path}.position`, errors),
+    size: readOptionalSize(candidate['size'], `${path}.size`, errors),
+    data: readDataRecord(candidate['data'], `${path}.data`, errors),
     createdAt: readRequiredString(
       candidate,
       'createdAt',

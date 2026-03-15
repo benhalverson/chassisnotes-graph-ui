@@ -32,14 +32,14 @@ export class GraphLibraryPage {
 
   private readonly router = inject(Router);
   protected readonly title = toSignal(
-    this.route.data.pipe(map((data) => (data.title as string) ?? 'Graphs')),
+    this.route.data.pipe(map((data) => (data['title'] as string) ?? 'Graphs')),
     { initialValue: 'Graphs' },
   );
   protected readonly description = toSignal(
     this.route.data.pipe(
       map(
         (data) =>
-          (data.description as string) ??
+          (data['description'] as string) ??
           'Create, duplicate, and open your 2WD carpet setup relationship maps.',
       ),
     ),
@@ -50,7 +50,7 @@ export class GraphLibraryPage {
   );
   protected readonly mode = toSignal(
     this.route.data.pipe(
-      map((data) => (data.mode as 'graphs' | 'garage') ?? 'graphs'),
+      map((data) => (data['mode'] as 'graphs' | 'garage') ?? 'graphs'),
     ),
     { initialValue: 'graphs' },
   );
