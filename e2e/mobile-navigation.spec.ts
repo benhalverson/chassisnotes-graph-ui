@@ -24,10 +24,10 @@ test('navigates between Today, Diagnose, Garage, and Map from the mobile tab bar
   await createBaselineGraph(page);
 
   await page.getByRole('link', { name: 'Map' }).click();
-  await expect(page.getByRole('heading', { name: '2WD Buggy Carpet Baseline' }).first()).toBeVisible();
   await expect(
-    page.getByRole('link', { name: 'Open garage' }),
+    page.getByRole('heading', { name: '2WD Buggy Carpet Baseline' }).first(),
   ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open garage' })).toBeVisible();
   await expect(page.getByLabel('Diagram canvas')).toBeVisible();
 });
 
@@ -43,7 +43,9 @@ test('opens the mobile palette and inspector sheets inside the editor', async ({
   });
   await expect(paletteDialog).toBeVisible();
   await paletteDialog.getByLabel('setup').check();
-  await expect(page.getByLabel('Rear oil 32.5wt')).not.toHaveClass(/opacity-45/);
+  await expect(page.getByLabel('Rear oil 32.5wt')).not.toHaveClass(
+    /opacity-45/,
+  );
   await expect(page.getByLabel('Lazy rotation')).toHaveClass(/opacity-45/);
   await paletteDialog.getByRole('button', { name: 'Close' }).click();
   await expect(paletteDialog).toBeHidden();

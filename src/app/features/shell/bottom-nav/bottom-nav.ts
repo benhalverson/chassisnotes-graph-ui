@@ -38,7 +38,9 @@ export class BottomNav {
     const url = this.currentUrl();
 
     if (path === '/map') {
-      return url === '/map' || url.startsWith('/map/') || url.startsWith('/graphs/');
+      return (
+        url === '/map' || url.startsWith('/map/') || url.startsWith('/graphs/')
+      );
     }
 
     if (path === '/garage') {
