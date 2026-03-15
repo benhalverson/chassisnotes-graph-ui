@@ -9,11 +9,23 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'graphs/:graphId',
-    loadComponent: () =>
-      import('./features/diagram/ui/graph-editor-page/graph-editor-page').then(
-        (m) => m.GraphEditorPage,
-      ),
+    path: 'graphs',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import(
+            './features/graphs/ui/graph-library-page/graph-library-page'
+          ).then((m) => m.GraphLibraryPage),
+      },
+      {
+        path: ':graphId',
+        loadComponent: () =>
+          import(
+            './features/diagram/ui/graph-editor-page/graph-editor-page'
+          ).then((m) => m.GraphEditorPage),
+      },
+    ],
   },
   {
     path: '**',

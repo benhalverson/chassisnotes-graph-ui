@@ -1,5 +1,6 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { provideRouter } from '@angular/router';
 
 import { DiagramStore } from '../../state/diagram-store';
 import { EditorShell } from './editor-shell';
@@ -58,7 +59,10 @@ describe('EditorShell', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EditorShell],
-      providers: [{ provide: DiagramStore, useValue: diagramStoreStub }],
+      providers: [
+        { provide: DiagramStore, useValue: diagramStoreStub },
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EditorShell);

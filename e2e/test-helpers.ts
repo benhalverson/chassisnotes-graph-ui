@@ -15,7 +15,7 @@ export async function resetApp(page: Page): Promise<void> {
   }, DATABASE_NAME);
   await page.reload();
   await expect(
-    page.getByRole('heading', { name: 'ChassisNotes Relationships' }),
+    page.getByRole('heading', { name: 'Graphs' }),
   ).toBeVisible();
 }
 
@@ -52,7 +52,7 @@ export async function openGraphFromLibrary(
 export async function returnToLibrary(page: Page): Promise<void> {
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: 'ChassisNotes Relationships' }),
+    page.getByRole('heading', { name: 'Graphs' }),
   ).toBeVisible();
   await expect(page.getByRole('region', { name: 'Saved graphs' })).toBeVisible();
 }

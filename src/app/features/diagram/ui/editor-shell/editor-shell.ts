@@ -12,6 +12,10 @@ import {
   type CanvasViewportRequest,
 } from '../canvas-toolbar/canvas-toolbar';
 import { DiagramCanvas } from '../diagram-canvas/diagram-canvas';
+import {
+  EditorContextHeader,
+  type SaveStatus,
+} from '../editor-context-header/editor-context-header';
 import { ImportExportDialog } from '../../../import-export/ui/import-export-dialog/import-export-dialog';
 import { LeftSidebar } from '../left-sidebar/left-sidebar';
 import { RightSidebar } from '../right-sidebar/right-sidebar';
@@ -19,6 +23,7 @@ import { RightSidebar } from '../right-sidebar/right-sidebar';
 @Component({
   selector: 'app-editor-shell',
   imports: [
+    EditorContextHeader,
     LeftSidebar,
     CanvasToolbar,
     DiagramCanvas,
@@ -35,6 +40,22 @@ export class EditorShell {
     null,
   );
   protected readonly importExportDialogOpen = signal(false);
+  protected readonly saveStatus = computed<SaveStatus>(() => {
+    if (this.diagramStore.mutating()) {
+      return 'saving';
+    }
+
+    if (this.diagramStore.graph()?.updatedAt) {
+      return 'saved';
+    }
+
+    return 'idle';
+  });
+
+  protected readonly lastSavedAt = computed(
+    () => this.diagramStore.graph()?.updatedAt ?? null,
+  );
+
   protected readonly toolbarStatusText = computed(() => {
     if (this.diagramStore.loading()) {
       return 'Loading the persisted graph…';
