@@ -1,7 +1,8 @@
 import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
 
 import type {
   GraphRecord,
@@ -93,6 +94,17 @@ describe('GraphLibraryPage', () => {
       providers: [
         { provide: GraphsStore, useValue: graphsStoreStub },
         { provide: Router, useValue: routerSpy as Pick<Router, 'navigate'> },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            data: of({
+              title: 'Graphs',
+              description:
+                'Create, duplicate, and open your 2WD carpet setup relationship maps.',
+              mode: 'graphs',
+            }),
+          },
+        },
       ],
     }).compileComponents();
 

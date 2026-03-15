@@ -22,12 +22,15 @@ export type CanvasViewportRequest = {
 })
 export class CanvasToolbar {
   readonly hasGraph = input(false);
+  readonly hasSelection = input(false);
   readonly busy = input(false);
   readonly statusText = input('Open a graph to use canvas controls.');
   readonly fitRequested = output<void>();
   readonly zoomInRequested = output<void>();
   readonly zoomOutRequested = output<void>();
   readonly importExportRequested = output<void>();
+  readonly mobilePaletteRequested = output<void>();
+  readonly mobileInspectorRequested = output<void>();
 
   protected readonly controlsDisabled = computed(
     () => !this.hasGraph() || this.busy(),
@@ -59,5 +62,13 @@ export class CanvasToolbar {
 
   protected openImportExport(): void {
     this.importExportRequested.emit();
+  }
+
+  protected openMobilePalette(): void {
+    this.mobilePaletteRequested.emit();
+  }
+
+  protected openMobileInspector(): void {
+    this.mobileInspectorRequested.emit();
   }
 }

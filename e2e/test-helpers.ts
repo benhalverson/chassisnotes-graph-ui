@@ -68,7 +68,7 @@ export async function expectEditorLoaded(
   page: Page,
   graphName: string,
 ): Promise<void> {
-  await expect(page).toHaveURL(/\/graphs\//);
+  await expect(page).toHaveURL(/\/(graphs|map)\//);
   await expect(
     page.getByRole('heading', { name: graphName, exact: true }).first(),
   ).toBeVisible();

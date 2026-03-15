@@ -19,6 +19,9 @@ export class EditorContextHeader {
   readonly graphTitle = input.required<string>();
   readonly saveStatus = input<SaveStatus>('idle');
   readonly lastSavedAt = input<string | null>(null);
+  readonly backLink = input<string | readonly string[]>('/graphs');
+  readonly backLabel = input('Back to Graphs');
+  readonly backAriaLabel = input('Back to Graphs');
 
   protected readonly saveStatusText = computed(() => {
     const status = this.saveStatus();

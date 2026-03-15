@@ -25,6 +25,7 @@ describe('AppDb', () => {
       service.nodes.clear(),
       service.edges.clear(),
       service.templates.clear(),
+      service.preferences.clear(),
     ]);
   });
 
@@ -38,6 +39,7 @@ describe('AppDb', () => {
       'nodes',
       'edges',
       'templates',
+      'preferences',
     ]);
   });
 });

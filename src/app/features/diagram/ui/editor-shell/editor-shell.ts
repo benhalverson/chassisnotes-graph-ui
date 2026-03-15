@@ -5,6 +5,7 @@ import {
   DestroyRef,
   effect,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { ImportExportDialog } from '../../../import-export/ui/import-export-dialog/import-export-dialog';
@@ -37,13 +38,22 @@ import { RightSidebar } from '../right-sidebar/right-sidebar';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditorShell {
+  readonly backLink = input<string | readonly string[]>('/graphs');
+  readonly backLabel = input('Back to Graphs');
+  readonly backAriaLabel = input('Back to Graphs');
   protected readonly diagramStore = inject(DiagramStore);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly viewportRequest = signal<CanvasViewportRequest | null>(
     null,
   );
   protected readonly importExportDialogOpen = signal(false);
+  protected readonly activeMobileSheet = signal<'palette' | 'inspector' | null>(
+    null,
+  );
   protected readonly saveStatus = signal<SaveStatus>('idle');
+  protected readonly hasSelection = computed(
+    () => this.diagramStore.selection() !== null,
+  );
 
   protected readonly lastSavedAt = computed(
     () => this.diagramStore.graph()?.updatedAt ?? null,
@@ -76,6 +86,19 @@ export class EditorShell {
       this.saveIdleTimeoutId = setTimeout(() => {
         this.saveStatus.set('idle');
       }, 5_000);
+    });
+
+    effect(() => {
+      const selection = this.diagramStore.selection();
+
+      if (selection) {
+        this.activeMobileSheet.set('inspector');
+        return;
+      }
+
+      if (this.activeMobileSheet() === 'inspector') {
+        this.activeMobileSheet.set(null);
+      }
     });
 
     this.destroyRef.onDestroy(() => {
@@ -121,5 +144,21 @@ export class EditorShell {
 
   protected closeImportExportDialog(): void {
     this.importExportDialogOpen.set(false);
+  }
+
+  protected openMobilePalette(): void {
+    this.activeMobileSheet.set('palette');
+  }
+
+  protected openMobileInspector(): void {
+    if (!this.hasSelection()) {
+      return;
+    }
+
+    this.activeMobileSheet.set('inspector');
+  }
+
+  protected closeMobileSheet(): void {
+    this.activeMobileSheet.set(null);
   }
 }

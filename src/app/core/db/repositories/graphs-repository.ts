@@ -31,6 +31,7 @@ export class GraphsRepository {
 
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private seedPromise?: Promise<void>;
+  private readonly activeGraphPreferenceKey = 'activeGraphId';
 
   async listGraphs(): Promise<GraphRecord[]> {
     if (!this.isBrowser) {
@@ -50,6 +51,71 @@ export class GraphsRepository {
     await this.ensureTemplatesSeeded();
 
     return this.db.templates.orderBy('name').toArray();
+  }
+
+  async getActiveGraphId(): Promise<string | null> {
+    if (!this.isBrowser) {
+      return null;
+    }
+
+    const preference = await this.db.preferences.get(this.activeGraphPreferenceKey);
+
+    return preference?.value ?? null;
+  }
+
+  async setActiveGraphId(graphId: string | null): Promise<void> {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    if (graphId) {
+      await this.db.preferences.put({
+        key: this.activeGraphPreferenceKey,
+        value: graphId,
+      });
+
+      return;
+    }
+
+    await this.db.preferences.delete(this.activeGraphPreferenceKey);
+  }
+
+  async resolveActiveGraphId(): Promise<string | null> {
+    if (!this.isBrowser) {
+      return null;
+    }
+
+    const persistedGraphId = await this.getActiveGraphId();
+
+    if (persistedGraphId) {
+      const persistedGraph = await this.db.graphs.get(persistedGraphId);
+
+      if (persistedGraph) {
+        return persistedGraph.id;
+      }
+
+      await this.setActiveGraphId(null);
+    }
+
+    const latestGraph = (await this.listGraphs())[0] ?? null;
+
+    if (!latestGraph) {
+      return null;
+    }
+
+    await this.setActiveGraphId(latestGraph.id);
+
+    return latestGraph.id;
+  }
+
+  async loadActiveGraph(): Promise<PersistedGraphDocument | null> {
+    const graphId = await this.resolveActiveGraphId();
+
+    if (!graphId) {
+      return null;
+    }
+
+    return this.loadGraph(graphId);
   }
 
   async createGraphFromTemplate(templateId: string): Promise<GraphRecord> {
@@ -107,6 +173,8 @@ export class GraphsRepository {
         await this.edgesRepository.bulkPut(edges);
       },
     );
+
+    await this.setActiveGraphId(graph.id);
 
     return graph;
   }
@@ -167,6 +235,8 @@ export class GraphsRepository {
       },
     );
 
+    await this.setActiveGraphId(graph.id);
+
     return graph;
   }
 
@@ -186,6 +256,12 @@ export class GraphsRepository {
         await this.db.graphs.delete(graphId);
       },
     );
+
+    const activeGraphId = await this.getActiveGraphId();
+
+    if (activeGraphId === graphId) {
+      await this.setActiveGraphId(null);
+    }
   }
 
   async loadGraph(graphId: string): Promise<PersistedGraphDocument | null> {
@@ -277,6 +353,8 @@ export class GraphsRepository {
         await this.edgesRepository.bulkPut(importedDocument.edges);
       },
     );
+
+    await this.setActiveGraphId(importedDocument.graph.id);
 
     return importedDocument.graph;
   }

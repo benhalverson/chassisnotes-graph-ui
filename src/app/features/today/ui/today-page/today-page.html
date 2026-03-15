@@ -1,0 +1,131 @@
+<main class="min-h-screen bg-slate-950 text-slate-100">
+	<section class="mx-auto flex w-full max-w-4xl flex-col gap-4 p-4 md:p-6">
+		<header class="space-y-2">
+			<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">
+				Today
+			</p>
+			<h1 class="text-3xl font-semibold tracking-tight">Trackside overview</h1>
+			<p class="max-w-2xl text-sm text-slate-300">
+				Keep the current setup map, surface context, and your next workflow actions in one place between runs.
+			</p>
+		</header>
+
+		<section class="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+			<article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+				<p class="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">Current map</p>
+				@if (latestGraph(); as graph) {
+					<h2 class="mt-3 text-2xl font-semibold tracking-tight">{{ graph.name }}</h2>
+					<p class="mt-2 text-sm text-slate-300">
+						{{ graph.chassis }} on {{ graph.surface }}. Open the full relationship editor or jump into diagnosis before your next run.
+					</p>
+					<div class="mt-4 flex flex-wrap gap-2">
+						<a
+							[routerLink]="['/map', graph.id]"
+							class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950"
+						>
+							Open map
+						</a>
+						<a
+							routerLink="/diagnose"
+							class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-100"
+						>
+							Diagnose handling
+						</a>
+					</div>
+				} @else {
+					<h2 class="mt-3 text-2xl font-semibold tracking-tight">No active map yet</h2>
+					<p class="mt-2 text-sm text-slate-300">
+						Start from a baseline template in Garage, then come back here for quick access between runs.
+					</p>
+					<a
+						routerLink="/garage"
+						class="mt-4 inline-flex rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950"
+					>
+						Open garage
+					</a>
+				}
+			</article>
+
+			<article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+				<p class="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">Track context</p>
+				<dl class="mt-3 space-y-3 text-sm text-slate-200">
+					<div>
+						<dt class="text-slate-400">Surface</dt>
+						<dd class="mt-1 font-medium">{{ trackCondition() }}</dd>
+					</div>
+					<div>
+						<dt class="text-slate-400">Class</dt>
+						<dd class="mt-1 font-medium">{{ latestGraph() ? latestGraph()!.classType : '2wd-buggy' }}</dd>
+					</div>
+					<div>
+						<dt class="text-slate-400">Next action</dt>
+						<dd class="mt-1 font-medium">Record a symptom, then compare it against the current map.</dd>
+					</div>
+				</dl>
+			</article>
+		</section>
+
+		<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+			<div class="flex items-center justify-between gap-3">
+				<h2 class="text-lg font-semibold tracking-tight">Recent setup changes</h2>
+				<span class="text-xs uppercase tracking-[0.2em] text-slate-400">Trackside log</span>
+			</div>
+			@if (recentChanges().length) {
+				<div class="mt-3 grid gap-3 md:grid-cols-3">
+					@for (change of recentChanges(); track change.id) {
+						<article class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+							<p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">{{ change.type }}</p>
+							<h3 class="mt-2 text-sm font-semibold text-slate-100">{{ change.title }}</h3>
+							<p class="mt-2 text-sm text-slate-300">{{ change.description || 'No notes recorded yet.' }}</p>
+							<p class="mt-3 text-xs text-slate-400">Updated {{ formatRelativeTime(change.updatedAt) }}</p>
+						</article>
+					}
+				</div>
+			} @else {
+				<p class="mt-3 text-sm text-slate-400">Recent setup and experiment changes will appear here after you start updating the map.</p>
+			}
+		</section>
+
+		<section class="grid gap-3 sm:grid-cols-3">
+			<button
+				type="button"
+				(click)="recordSymptom()"
+				class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 transition-colors hover:border-amber-400/60"
+			>
+				<p class="text-sm font-semibold text-slate-100">Record symptom</p>
+				<p class="mt-2 text-sm text-slate-300">Walk through entry, mid, exit, bumps, and jumps before you change the setup.</p>
+			</button>
+			<button
+				type="button"
+				(click)="logChange()"
+				class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 transition-colors hover:border-amber-400/60"
+			>
+				<p class="text-sm font-semibold text-slate-100">Log Change</p>
+				<p class="mt-2 text-sm text-slate-300">Create a fresh experiment node directly inside the active map and capture the setup adjustment.</p>
+			</button>
+			<button
+				type="button"
+				(click)="startNewSession()"
+				class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 transition-colors hover:border-amber-400/60"
+			>
+				<p class="text-sm font-semibold text-slate-100">Start New Session</p>
+				<p class="mt-2 text-sm text-slate-300">Spin up a fresh baseline graph from the starter template and jump straight into the mobile map.</p>
+			</button>
+		</section>
+
+		@if (recentSessions().length) {
+			<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+				<h2 class="text-lg font-semibold tracking-tight">Recent sessions</h2>
+				<div class="mt-3 grid gap-3 md:grid-cols-3">
+					@for (session of recentSessions(); track session.id) {
+						<a [routerLink]="['/map', session.id]" class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 transition-colors hover:border-amber-400/60">
+							<p class="text-sm font-semibold text-slate-100">{{ session.name }}</p>
+							<p class="mt-1 text-sm text-slate-300">{{ session.chassis }} • {{ session.surface }}</p>
+							<p class="mt-3 text-xs text-slate-400">Updated {{ formatRelativeTime(session.updatedAt) }}</p>
+						</a>
+					}
+				</div>
+			</section>
+		}
+	</section>
+</main>

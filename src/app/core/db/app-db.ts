@@ -7,6 +7,11 @@ import type {
   TemplateRecord,
 } from '../models/graph.models';
 
+export interface AppPreferenceRecord {
+  key: string;
+  value: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -15,6 +20,7 @@ export class AppDb extends Dexie {
   readonly nodes!: Table<GraphNodeRecord, string>;
   readonly edges!: Table<GraphEdgeRecord, string>;
   readonly templates!: Table<TemplateRecord, string>;
+  readonly preferences!: Table<AppPreferenceRecord, string>;
 
   constructor() {
     super('chassisnotes_relationships');
@@ -25,6 +31,15 @@ export class AppDb extends Dexie {
       edges:
         'id, graphId, [graphId+relationshipType], [graphId+sourceNodeId], [graphId+targetNodeId]',
       templates: 'id, name, updatedAt',
+    });
+
+    this.version(2).stores({
+      graphs: 'id, updatedAt, [surface+classType], [chassis+classType]',
+      nodes: 'id, graphId, [graphId+type], [graphId+subtype]',
+      edges:
+        'id, graphId, [graphId+relationshipType], [graphId+sourceNodeId], [graphId+targetNodeId]',
+      templates: 'id, name, updatedAt',
+      preferences: 'key',
     });
   }
 }

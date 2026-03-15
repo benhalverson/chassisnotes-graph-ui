@@ -1,0 +1,40 @@
+<main class="min-h-screen bg-slate-950 text-slate-100">
+	@if (hasGraph()) {
+		<section class="mx-auto flex w-full max-w-7xl flex-col gap-4 p-3 md:p-4">
+			<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+				<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+					<div>
+						<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">Map</p>
+						<h1 class="mt-2 text-2xl font-semibold tracking-tight">{{ currentGraph()?.name }}</h1>
+						<p class="mt-1 text-sm text-slate-300">Pan, zoom, inspect, filter, and make quick setup edits from the active relationship map.</p>
+					</div>
+					<a routerLink="/garage" class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-100">Open garage</a>
+				</div>
+
+				@if (recentGraphs().length) {
+					<div class="mt-4 flex gap-2 overflow-x-auto pb-1">
+						@for (graph of recentGraphs(); track graph.id) {
+							<button type="button" class="whitespace-nowrap rounded-full border border-slate-700 px-3 py-2 text-xs font-medium text-slate-100" (click)="openGraph(graph.id)">
+								{{ graph.name }}
+							</button>
+						}
+					</div>
+				}
+			</section>
+
+			<app-editor-shell
+				[backLink]="['/garage']"
+				[backLabel]="'Back to Garage'"
+				[backAriaLabel]="'Back to Garage'"
+			></app-editor-shell>
+		</section>
+	} @else {
+		<section class="mx-auto flex w-full max-w-4xl flex-col gap-4 p-4 md:p-6">
+			<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+				<h1 class="text-2xl font-semibold tracking-tight">No saved graph yet</h1>
+				<p class="mt-2 text-sm text-slate-300">Create a baseline from Garage before you start linking symptoms, outcomes, and setup changes.</p>
+				<a routerLink="/garage" class="mt-4 inline-flex rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950">Open garage</a>
+			</section>
+		</section>
+	}
+</main>
