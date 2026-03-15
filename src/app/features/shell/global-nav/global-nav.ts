@@ -10,8 +10,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class GlobalNav {
   protected readonly navLinks = [
-    { path: '/', label: 'Home', exact: true },
-    { path: '/graphs', label: 'Graphs', exact: false },
+    { path: '/graphs', label: 'Graphs', exact: true },
     { path: '/diagnose', label: 'Diagnose', exact: false },
     { path: '/templates', label: 'Templates', exact: false },
   ];

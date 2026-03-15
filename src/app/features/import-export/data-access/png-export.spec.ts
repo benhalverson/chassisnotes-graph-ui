@@ -66,21 +66,23 @@ describe('PngExport', () => {
       toBlob: vi.fn((callback: BlobCallback) => callback(new Blob(['png']))),
     } as unknown as HTMLCanvasElement;
     const originalCreateElement = document.createElement.bind(document);
-    createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
-      if (tagName === 'canvas') {
-        return canvasElement;
-      }
+    createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        if (tagName === 'canvas') {
+          return canvasElement;
+        }
 
-      if (tagName === 'a') {
-        return {
-          href: '',
-          download: '',
-          click: clickSpy,
-        } as unknown as HTMLAnchorElement;
-      }
+        if (tagName === 'a') {
+          return {
+            href: '',
+            download: '',
+            click: clickSpy,
+          } as unknown as HTMLAnchorElement;
+        }
 
-      return originalCreateElement(tagName);
-    });
+        return originalCreateElement(tagName);
+      });
     createObjectUrlSpy = vi
       .spyOn(URL, 'createObjectURL')
       .mockReturnValueOnce('blob:svg')

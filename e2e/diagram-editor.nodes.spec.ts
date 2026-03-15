@@ -25,7 +25,10 @@ test('adds, edits, and deletes nodes with persistence after reopening from the l
     .getByLabel('Description')
     .fill('Softer front spring to calm turn-in bite on carpet.');
   await nodeForm.getByLabel('Confidence').selectOption('high');
-  await nodeForm.locator('label', { hasText: 'braking' }).locator('input').check();
+  await nodeForm
+    .locator('label', { hasText: 'braking' })
+    .locator('input')
+    .check();
   await nodeForm.getByRole('button', { name: 'Save changes' }).click();
 
   await expect(page.getByLabel('Front spring 2.6')).toBeVisible();

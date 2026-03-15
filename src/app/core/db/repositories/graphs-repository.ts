@@ -5,8 +5,8 @@ import { GraphJsonIo } from '../../../features/import-export/data-access/graph-j
 import { ImportValidator } from '../../../features/import-export/data-access/import-validator';
 import { TemplatesCatalog } from '../../../features/templates/data-access/templates-catalog';
 import type {
-  GraphExportPayload,
   GraphEdgeRecord,
+  GraphExportPayload,
   GraphNodeRecord,
   GraphRecord,
   PersistedGraphDocument,

@@ -36,7 +36,9 @@ export class NodeInspectorForm {
   protected readonly confidenceLevels = CONFIDENCE_LEVELS;
   protected readonly phaseTags = GRAPH_PHASE_TAGS;
   protected readonly selectedPhaseTags = signal<GraphPhaseTag[]>([]);
-  protected readonly autosaveStatus = signal<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle');
+  protected readonly autosaveStatus = signal<
+    'idle' | 'pending' | 'saving' | 'saved' | 'error'
+  >('idle');
   protected readonly form = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,

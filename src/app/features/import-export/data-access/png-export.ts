@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
@@ -21,7 +21,10 @@ export class PngExport {
       throw new Error('The diagram canvas is not ready to export.');
     }
 
-    const width = Math.max(Math.ceil(svgElement.getBoundingClientRect().width), 1);
+    const width = Math.max(
+      Math.ceil(svgElement.getBoundingClientRect().width),
+      1,
+    );
     const height = Math.max(
       Math.ceil(svgElement.getBoundingClientRect().height),
       1,
@@ -76,7 +79,10 @@ function loadImage(source: string): Promise<HTMLImageElement> {
     const image = new Image();
 
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('The diagram image could not be rendered for PNG export.'));
+    image.onerror = () =>
+      reject(
+        new Error('The diagram image could not be rendered for PNG export.'),
+      );
     image.src = source;
   });
 }
@@ -95,7 +101,11 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   });
 }
 
-function normalizeSvgMarkup(markup: string, width: number, height: number): string {
+function normalizeSvgMarkup(
+  markup: string,
+  width: number,
+  height: number,
+): string {
   let normalizedMarkup = markup;
 
   if (!normalizedMarkup.includes('xmlns="http://www.w3.org/2000/svg"')) {
@@ -113,11 +123,17 @@ function normalizeSvgMarkup(markup: string, width: number, height: number): stri
   }
 
   if (!/width="\d/.test(normalizedMarkup)) {
-    normalizedMarkup = normalizedMarkup.replace('<svg', `<svg width="${width}"`);
+    normalizedMarkup = normalizedMarkup.replace(
+      '<svg',
+      `<svg width="${width}"`,
+    );
   }
 
   if (!/height="\d/.test(normalizedMarkup)) {
-    normalizedMarkup = normalizedMarkup.replace('<svg', `<svg height="${height}"`);
+    normalizedMarkup = normalizedMarkup.replace(
+      '<svg',
+      `<svg height="${height}"`,
+    );
   }
 
   return normalizedMarkup;

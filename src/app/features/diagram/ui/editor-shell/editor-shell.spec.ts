@@ -1,5 +1,5 @@
-import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { DiagramStore } from '../../state/diagram-store';
@@ -10,9 +10,11 @@ describe('EditorShell', () => {
   let fixture: ComponentFixture<EditorShell>;
 
   beforeAll(() => {
-    (globalThis as typeof globalThis & {
-      ResizeObserver?: typeof ResizeObserver;
-    }).ResizeObserver = class ResizeObserver {
+    (
+      globalThis as typeof globalThis & {
+        ResizeObserver?: typeof ResizeObserver;
+      }
+    ).ResizeObserver = class ResizeObserver {
       observe(): void {}
       unobserve(): void {}
       disconnect(): void {}

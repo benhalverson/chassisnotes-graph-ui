@@ -3,10 +3,8 @@ import type { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () =>
-      import('./features/graphs/ui/graph-library-page/graph-library-page').then(
-        (m) => m.GraphLibraryPage,
-      ),
+    redirectTo: 'graphs',
+    pathMatch: 'full',
   },
   {
     path: 'graphs',
@@ -28,7 +26,23 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'diagnose',
+    loadComponent: () =>
+      import('./features/shell/placeholder-page/placeholder-page').then(
+        (m) => m.PlaceholderPage,
+      ),
+    data: { title: 'Diagnose' },
+  },
+  {
+    path: 'templates',
+    loadComponent: () =>
+      import('./features/shell/placeholder-page/placeholder-page').then(
+        (m) => m.PlaceholderPage,
+      ),
+    data: { title: 'Templates' },
+  },
+  {
     path: '**',
-    redirectTo: '',
+    redirectTo: 'graphs',
   },
 ];

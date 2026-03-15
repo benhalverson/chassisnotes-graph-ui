@@ -1,11 +1,10 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-
+import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import type {
   GraphExportPayload,
   GraphRecord,
 } from '../../../../core/models/graph.models';
-import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import { GraphJsonIo } from '../../data-access/graph-json-io';
 import { PngExport } from '../../data-access/png-export';
 
@@ -18,7 +17,8 @@ describe('ImportExportDialog', () => {
     navigate: vi.fn<(commands: unknown[]) => Promise<boolean>>(),
   };
   const repositoryStub = {
-    exportGraph: vi.fn<(graphId: string) => Promise<GraphExportPayload | null>>(),
+    exportGraph:
+      vi.fn<(graphId: string) => Promise<GraphExportPayload | null>>(),
     importGraph: vi.fn<(candidate: unknown) => Promise<GraphRecord>>(),
   } satisfies Pick<GraphsRepository, 'exportGraph' | 'importGraph'>;
   const graphJsonIoStub = {
@@ -82,28 +82,26 @@ describe('ImportExportDialog', () => {
     createdObjectUrl = 'blob:test';
     createdBlob = null;
     clickSpy = vi.fn();
-    createSpy = vi
-      .spyOn(URL, 'createObjectURL')
-      .mockImplementation((blob) => {
-        createdBlob = blob;
+    createSpy = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      createdBlob = blob;
 
-        return createdObjectUrl;
-      });
+      return createdObjectUrl;
+    });
     revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const originalCreateElement = document.createElement.bind(document);
     createElementSpy = vi
       .spyOn(document, 'createElement')
       .mockImplementation((tagName: string) => {
-      if (tagName === 'a') {
-        return {
-          href: '',
-          download: '',
-          click: clickSpy,
-        } as unknown as HTMLAnchorElement;
-      }
+        if (tagName === 'a') {
+          return {
+            href: '',
+            download: '',
+            click: clickSpy,
+          } as unknown as HTMLAnchorElement;
+        }
 
-      return originalCreateElement(tagName);
-    });
+        return originalCreateElement(tagName);
+      });
 
     await TestBed.configureTestingModule({
       imports: [ImportExportDialog],
@@ -171,8 +169,13 @@ describe('ImportExportDialog', () => {
     fixture.detectChanges();
 
     expect(graphJsonIoStub.parse).toHaveBeenCalledWith('{"schemaVersion":1}');
-    expect(repositoryStub.importGraph).toHaveBeenCalledWith({ schemaVersion: 1 });
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/graphs', 'graph-imported']);
+    expect(repositoryStub.importGraph).toHaveBeenCalledWith({
+      schemaVersion: 1,
+    });
+    expect(routerSpy.navigate).toHaveBeenCalledWith([
+      '/graphs',
+      'graph-imported',
+    ]);
     expect(closeSpy).toHaveBeenCalled();
   });
 
@@ -189,7 +192,9 @@ describe('ImportExportDialog', () => {
   });
 
   it('should surface import failures', async () => {
-    repositoryStub.importGraph.mockRejectedValueOnce(new Error('Broken import'));
+    repositoryStub.importGraph.mockRejectedValueOnce(
+      new Error('Broken import'),
+    );
     const file = new File(['{"schemaVersion":1}'], 'graph.json', {
       type: 'application/json',
     });

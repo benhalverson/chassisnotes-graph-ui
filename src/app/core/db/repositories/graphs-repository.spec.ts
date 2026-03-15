@@ -162,7 +162,9 @@ describe('GraphsRepository', () => {
       throw new Error('Expected an export payload.');
     }
 
-    const importedGraph = await service.importGraph(exported satisfies GraphExportPayload);
+    const importedGraph = await service.importGraph(
+      exported satisfies GraphExportPayload,
+    );
     const importedDocument = await service.loadGraph(importedGraph.id);
 
     expect(importedGraph.id).not.toBe(graph.id);

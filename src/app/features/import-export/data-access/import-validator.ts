@@ -75,7 +75,9 @@ export class ImportValidator {
     });
 
     if (documentIssues.length > 0) {
-      errors.push(...documentIssues.map((issue) => `${issue.path}: ${issue.message}`));
+      errors.push(
+        ...documentIssues.map((issue) => `${issue.path}: ${issue.message}`),
+      );
     }
 
     return {
@@ -177,7 +179,12 @@ function readGraphRecord(
       errors,
     ) as GraphRecord['surface'],
     notes: readRequiredString(candidate, 'notes', `${path}.notes`, errors),
-    templateId: readOptionalString(candidate, 'templateId', `${path}.templateId`, errors),
+    templateId: readOptionalString(
+      candidate,
+      'templateId',
+      `${path}.templateId`,
+      errors,
+    ),
     createdAt: readRequiredString(
       candidate,
       'createdAt',
@@ -190,7 +197,12 @@ function readGraphRecord(
       `${path}.updatedAt`,
       errors,
     ),
-    version: readRequiredNumber(candidate, 'version', `${path}.version`, errors),
+    version: readRequiredNumber(
+      candidate,
+      'version',
+      `${path}.version`,
+      errors,
+    ),
   };
 }
 
@@ -205,7 +217,9 @@ function readNodeRecords(
     return null;
   }
 
-  return candidate.map((entry, index) => readNodeRecord(entry, `${path}[${index}]`, errors));
+  return candidate.map((entry, index) =>
+    readNodeRecord(entry, `${path}[${index}]`, errors),
+  );
 }
 
 function readNodeRecord(
@@ -221,9 +235,24 @@ function readNodeRecord(
 
   return {
     id: readRequiredString(candidate, 'id', `${path}.id`, errors),
-    graphId: readRequiredString(candidate, 'graphId', `${path}.graphId`, errors),
-    type: readRequiredString(candidate, 'type', `${path}.type`, errors) as GraphNodeRecord['type'],
-    subtype: readRequiredString(candidate, 'subtype', `${path}.subtype`, errors),
+    graphId: readRequiredString(
+      candidate,
+      'graphId',
+      `${path}.graphId`,
+      errors,
+    ),
+    type: readRequiredString(
+      candidate,
+      'type',
+      `${path}.type`,
+      errors,
+    ) as GraphNodeRecord['type'],
+    subtype: readRequiredString(
+      candidate,
+      'subtype',
+      `${path}.subtype`,
+      errors,
+    ),
     title: readRequiredString(candidate, 'title', `${path}.title`, errors),
     description: readRequiredString(
       candidate,
@@ -273,7 +302,9 @@ function readEdgeRecords(
     return null;
   }
 
-  return candidate.map((entry, index) => readEdgeRecord(entry, `${path}[${index}]`, errors));
+  return candidate.map((entry, index) =>
+    readEdgeRecord(entry, `${path}[${index}]`, errors),
+  );
 }
 
 function readEdgeRecord(
@@ -289,7 +320,12 @@ function readEdgeRecord(
 
   return {
     id: readRequiredString(candidate, 'id', `${path}.id`, errors),
-    graphId: readRequiredString(candidate, 'graphId', `${path}.graphId`, errors),
+    graphId: readRequiredString(
+      candidate,
+      'graphId',
+      `${path}.graphId`,
+      errors,
+    ),
     sourceNodeId: readRequiredString(
       candidate,
       'sourceNodeId',
