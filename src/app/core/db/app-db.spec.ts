@@ -35,7 +35,7 @@ describe('AppDb', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should expose the milestone 3 Dexie tables', () => {
+  it('should expose the milestone 8 Dexie tables', () => {
     expect(service.tables.map((table) => table.name)).toEqual([
       'graphs',
       'nodes',
