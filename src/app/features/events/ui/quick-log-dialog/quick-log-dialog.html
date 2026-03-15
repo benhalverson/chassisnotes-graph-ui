@@ -79,6 +79,8 @@
 						id="symptom-input"
 						type="text"
 						formControlName="symptom"
+						required
+						aria-required="true"
 						placeholder="e.g. entry push under power"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 						autocomplete="off"
@@ -89,6 +91,8 @@
 					<select
 						id="corner-phase-select"
 						formControlName="cornerPhase"
+						required
+						aria-required="true"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 					>
 						@for (tag of phaseTags; track tag) {
@@ -101,6 +105,8 @@
 					<select
 						id="confidence-select"
 						formControlName="confidence"
+						required
+						aria-required="true"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 					>
 						@for (level of confidenceLevels; track level) {
@@ -134,6 +140,8 @@
 						id="component-input"
 						type="text"
 						formControlName="component"
+						required
+						aria-required="true"
 						placeholder="e.g. Front spring"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 						autocomplete="off"
@@ -146,6 +154,8 @@
 							id="from-value-input"
 							type="text"
 							formControlName="fromValue"
+							required
+							aria-required="true"
 							placeholder="e.g. 1.4"
 							class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 							autocomplete="off"
@@ -157,6 +167,8 @@
 							id="to-value-input"
 							type="text"
 							formControlName="toValue"
+							required
+							aria-required="true"
 							placeholder="e.g. 1.6"
 							class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 							autocomplete="off"
@@ -169,6 +181,8 @@
 						id="reason-input"
 						type="text"
 						formControlName="reason"
+						required
+						aria-required="true"
 						placeholder="e.g. entry push"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 						autocomplete="off"
@@ -205,6 +219,8 @@
 						id="outcome-input"
 						type="text"
 						formControlName="outcome"
+						required
+						aria-required="true"
 						placeholder="e.g. reduced entry push"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 						autocomplete="off"
@@ -215,6 +231,8 @@
 					<select
 						id="effect-select"
 						formControlName="effect"
+						required
+						aria-required="true"
 						class="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
 					>
 						@for (option of effectOptions; track option.value) {
