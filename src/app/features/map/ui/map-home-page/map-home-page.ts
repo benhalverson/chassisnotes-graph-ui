@@ -8,14 +8,15 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, map } from 'rxjs';
-import type { GraphNodeType, GraphRecord } from '../../../../core/models/graph.models';
+import type { GraphNodeType, GraphRecord, PersistedGraphDocument } from '../../../../core/models/graph.models';
 import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import { DiagramStore } from '../../../diagram/state/diagram-store';
 import { EditorShell } from '../../../diagram/ui/editor-shell/editor-shell';
+import { QuickLogDialog } from '../../../events/ui/quick-log-dialog/quick-log-dialog';
 
 @Component({
   selector: 'app-map-home-page',
-  imports: [RouterLink, EditorShell],
+  imports: [RouterLink, EditorShell, QuickLogDialog],
   templateUrl: './map-home-page.html',
   styleUrl: './map-home-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +36,7 @@ export class MapHomePage {
       .filter((graph) => graph.id !== this.currentGraph()?.id)
       .slice(0, 4),
   );
+  protected readonly showQuickLog = signal(false);
 
   constructor() {
     combineLatest([
@@ -55,6 +57,20 @@ export class MapHomePage {
 
   protected async openGraph(graphId: string): Promise<void> {
     await this.router.navigate(['/map', graphId]);
+  }
+
+  protected toggleQuickLog(): void {
+    this.showQuickLog.update((v) => !v);
+  }
+
+  protected closeQuickLog(): void {
+    this.showQuickLog.set(false);
+  }
+
+  protected async onEventLogged(updatedDocument: PersistedGraphDocument): Promise<void> {
+    await this.graphsRepository.saveGraphDocument(updatedDocument);
+    const graphId = updatedDocument.graph.id;
+    await this.diagramStore.loadGraph(graphId);
   }
 
   private async loadMap(

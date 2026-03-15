@@ -8,7 +8,16 @@
 						<h1 class="mt-2 text-2xl font-semibold tracking-tight">{{ currentGraph()?.name }}</h1>
 						<p class="mt-1 text-sm text-slate-300">Pan, zoom, inspect, filter, and make quick setup edits from the active relationship map.</p>
 					</div>
-					<a routerLink="/garage" class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-100">Open garage</a>
+					<div class="flex gap-2">
+						<button
+							type="button"
+							class="rounded-xl border border-amber-400/60 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/20"
+							(click)="toggleQuickLog()"
+						>
+							Quick Log
+						</button>
+						<a routerLink="/garage" class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-100">Open garage</a>
+					</div>
 				</div>
 
 				@if (recentGraphs().length) {
@@ -36,5 +45,13 @@
 				<a routerLink="/garage" class="mt-4 inline-flex rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950">Open garage</a>
 			</section>
 		</section>
+	}
+
+	@if (showQuickLog() && currentGraph()) {
+		<app-quick-log-dialog
+			[graphId]="currentGraph()!.id"
+			(closeRequested)="closeQuickLog()"
+			(eventLogged)="onEventLogged($event)"
+		/>
 	}
 </main>

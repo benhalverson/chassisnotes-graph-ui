@@ -26,6 +26,8 @@ describe('AppDb', () => {
       service.edges.clear(),
       service.templates.clear(),
       service.preferences.clear(),
+      service.sessions.clear(),
+      service.events.clear(),
     ]);
   });
 
@@ -33,13 +35,15 @@ describe('AppDb', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should expose the milestone 2 Dexie tables', () => {
+  it('should expose the milestone 3 Dexie tables', () => {
     expect(service.tables.map((table) => table.name)).toEqual([
       'graphs',
       'nodes',
       'edges',
       'templates',
       'preferences',
+      'sessions',
+      'events',
     ]);
   });
 });
