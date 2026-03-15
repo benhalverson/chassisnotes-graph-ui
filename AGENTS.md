@@ -59,6 +59,8 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 Before making changes, read these files in order:
 - `AGENTS.md`
 - `MVP_SPEC.md`
+- `MVP_MILESTONES_6_9.md`
+- `ux-screens.png`
 
 ## Priority and conflict resolution
 
