@@ -6,11 +6,10 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import type { GraphPhaseTag } from '../../../../core/models/graph.models';
+import type { ConfidenceLevel, GraphPhaseTag } from '../../../../core/models/graph.models';
 import { DiagramStore } from '../../../diagram/state/diagram-store';
 import {
   SuggestionEngine,
-  type DiagnosticSuggestion,
   type ExperimentHistoryEntry,
 } from '../../data-access/suggestion-engine';
 
@@ -21,10 +20,14 @@ type DiagnoseSymptom =
   | 'rear-loose'
   | 'poor-forward-bite';
 
-type StaticSuggestionCard = {
+/** Unified display type covering both graph-derived and static suggestions. */
+export type SuggestionDisplayCard = {
   title: string;
-  confidence: 'low' | 'medium' | 'high';
-  note: string;
+  confidence: ConfidenceLevel;
+  /** Descriptive hint text shown for static fallback suggestions. */
+  note?: string;
+  /** Evidence-based reasoning shown for graph-derived suggestions. */
+  reasoning?: string;
 };
 
 const PHASE_OPTIONS: Array<{ id: DiagnosePhase; label: string }> = [
@@ -42,7 +45,7 @@ const SYMPTOM_OPTIONS: Array<{ id: DiagnoseSymptom; label: string }> = [
   { id: 'poor-forward-bite', label: 'Poor forward bite' },
 ];
 
-const STATIC_SUGGESTIONS: Record<DiagnoseSymptom, StaticSuggestionCard[]> = {
+const STATIC_SUGGESTIONS: Record<DiagnoseSymptom, SuggestionDisplayCard[]> = {
   push: [
     {
       title: 'Free up front rotation',
@@ -131,7 +134,7 @@ export class DiagnosePage {
   );
 
   /** Graph-derived suggestions ranked by confidence and evidence strength. */
-  protected readonly graphSuggestions = computed<DiagnosticSuggestion[]>(() => {
+  protected readonly graphSuggestions = computed<SuggestionDisplayCard[]>(() => {
     const nodes = this.diagramStore.nodes();
     const edges = this.diagramStore.edges();
 
@@ -144,7 +147,11 @@ export class DiagnosePage {
       phase: this.selectedPhase(),
       nodes,
       edges,
-    });
+    }).map(({ title, confidence, reasoning }): SuggestionDisplayCard => ({
+      title,
+      confidence,
+      reasoning,
+    }));
   });
 
   /** Static fallback suggestions shown when no graph is loaded. */

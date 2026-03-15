@@ -279,8 +279,9 @@ export class SuggestionEngine {
         return false;
       }
 
-      const titleMatch = node.title.toLowerCase().includes(normalized) ||
-        normalized.includes(node.title.toLowerCase());
+      const titleLower = node.title.toLowerCase();
+      const titleMatch = titleLower.includes(normalized) ||
+        normalized.includes(titleLower);
 
       const phaseMatch =
         node.phaseTags.length === 0 || node.phaseTags.includes(phase);
