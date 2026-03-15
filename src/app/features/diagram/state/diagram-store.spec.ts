@@ -290,4 +290,78 @@ describe('DiagramStore', () => {
     });
     expect(service.validationError()).toBeNull();
   });
+
+  it('should set and clear symptom highlight node and edge IDs', async () => {
+    await service.loadGraph(graph.id);
+
+    service.setSymptomHighlight(['node-1', 'node-2'], ['edge-1']);
+
+    expect(service.symptomHighlightNodeIds()).toEqual(['node-1', 'node-2']);
+    expect(service.symptomHighlightEdgeIds()).toEqual(['edge-1']);
+
+    service.clearSymptomHighlight();
+
+    expect(service.symptomHighlightNodeIds()).toEqual([]);
+    expect(service.symptomHighlightEdgeIds()).toEqual([]);
+  });
+
+  it('should include symptom highlight node IDs in the computed highlighted set', async () => {
+    await service.loadGraph(graph.id);
+
+    service.setSymptomHighlight(['node-1'], ['edge-1']);
+
+    expect(service.highlightedNodeIds()).toContain('node-1');
+    expect(service.highlightedEdgeIds()).toContain('edge-1');
+  });
+
+  it('should dim nodes not in the symptom highlight set when highlight is applied', async () => {
+    await service.loadGraph(graph.id);
+
+    service.setSymptomHighlight(['node-1'], []);
+
+    expect(service.dimmedNodeIds()).toContain('node-2');
+    expect(service.dimmedNodeIds()).not.toContain('node-1');
+  });
+
+  it('should update edge confidence upward on improved result', async () => {
+    await service.loadGraph(graph.id);
+
+    const result = await service.updateEdgeConfidence('edge-1', 'improved');
+
+    expect(result).toBe(true);
+    expect(service.edges().find((e) => e.id === 'edge-1')?.confidence).toBe('high');
+    expect(graphsRepositorySpy.saveGraphDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it('should update edge confidence downward on worsened result', async () => {
+    await service.loadGraph(graph.id);
+
+    const result = await service.updateEdgeConfidence('edge-1', 'worsened');
+
+    expect(result).toBe(true);
+    expect(service.edges().find((e) => e.id === 'edge-1')?.confidence).toBe('low');
+    expect(graphsRepositorySpy.saveGraphDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not persist when edge confidence is already at the boundary', async () => {
+    await service.loadGraph(graph.id);
+
+    // edge-1 has confidence 'medium', worsened → 'low', then worsened again should stay 'low'
+    await service.updateEdgeConfidence('edge-1', 'worsened');
+    graphsRepositorySpy.saveGraphDocument.mockClear();
+
+    const result = await service.updateEdgeConfidence('edge-1', 'worsened');
+
+    expect(result).toBe(true);
+    expect(graphsRepositorySpy.saveGraphDocument).not.toHaveBeenCalled();
+  });
+
+  it('should return false when updating confidence for a non-existent edge', async () => {
+    await service.loadGraph(graph.id);
+
+    const result = await service.updateEdgeConfidence('edge-999', 'improved');
+
+    expect(result).toBe(false);
+    expect(graphsRepositorySpy.saveGraphDocument).not.toHaveBeenCalled();
+  });
 });

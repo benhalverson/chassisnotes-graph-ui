@@ -33,6 +33,8 @@ type DiagramState = {
   edges: GraphEdgeRecord[];
   selection: DiagramSelection;
   filters: DiagramFilters;
+  symptomHighlightNodeIds: string[];
+  symptomHighlightEdgeIds: string[];
   loading: boolean;
   mutating: boolean;
   error: string | null;
@@ -73,6 +75,8 @@ function createInitialState(): DiagramState {
     edges: [],
     selection: null,
     filters: createInitialFilters(),
+    symptomHighlightNodeIds: [],
+    symptomHighlightEdgeIds: [],
     loading: false,
     mutating: false,
     error: null,
@@ -98,6 +102,8 @@ export const DiagramStore = signalStore(
         store.edges(),
         store.selection(),
         store.filters(),
+        store.symptomHighlightNodeIds(),
+        store.symptomHighlightEdgeIds(),
       ),
     );
 
@@ -649,6 +655,68 @@ export const DiagramStore = signalStore(
       clear(): void {
         patchState(store, createInitialState());
       },
+
+      setSymptomHighlight(nodeIds: string[], edgeIds: string[]): void {
+        patchState(store, {
+          symptomHighlightNodeIds: nodeIds,
+          symptomHighlightEdgeIds: edgeIds,
+        });
+      },
+
+      clearSymptomHighlight(): void {
+        patchState(store, {
+          symptomHighlightNodeIds: [],
+          symptomHighlightEdgeIds: [],
+        });
+      },
+
+      async updateEdgeConfidence(
+        edgeId: string,
+        result: 'improved' | 'worsened' | 'neutral',
+      ): Promise<boolean> {
+        const graph = store.graph();
+
+        if (!graph) {
+          return false;
+        }
+
+        const edges = store.edges();
+        const targetEdge = edges.find((edge) => edge.id === edgeId);
+
+        if (!targetEdge) {
+          return false;
+        }
+
+        const levels: ConfidenceLevel[] = ['low', 'medium', 'high'];
+        const currentIndex = levels.indexOf(targetEdge.confidence);
+        let nextConfidence: ConfidenceLevel = targetEdge.confidence;
+
+        if (result === 'improved') {
+          nextConfidence = levels[Math.min(currentIndex + 1, levels.length - 1)] ?? targetEdge.confidence;
+        } else if (result === 'worsened') {
+          nextConfidence = levels[Math.max(currentIndex - 1, 0)] ?? targetEdge.confidence;
+        }
+
+        if (nextConfidence === targetEdge.confidence) {
+          return true;
+        }
+
+        const timestamp = new Date().toISOString();
+        const updatedEdges = edges.map((edge) =>
+          edge.id === edgeId
+            ? { ...edge, confidence: nextConfidence, updatedAt: timestamp }
+            : edge,
+        );
+
+        await persistGraphDocument(
+          { ...graph, updatedAt: timestamp },
+          store.nodes(),
+          updatedEdges,
+          store.selection(),
+        );
+
+        return true;
+      },
     };
   }),
 );
@@ -844,6 +912,8 @@ function computeDiagramFilterState(
   edges: readonly GraphEdgeRecord[],
   selection: DiagramSelection,
   filters: DiagramFilters,
+  symptomHighlightNodeIds: readonly string[] = [],
+  symptomHighlightEdgeIds: readonly string[] = [],
 ): DiagramFilterState {
   const matchedNodeIds = new Set<string>();
 
@@ -865,8 +935,42 @@ function computeDiagramFilterState(
     }
   });
 
-  const highlightedNodeIds = new Set<string>(matchedNodeIds);
-  const highlightedEdgeIds = new Set<string>(matchedEdgeIds);
+  const hasSymptomHighlight =
+    symptomHighlightNodeIds.length > 0 || symptomHighlightEdgeIds.length > 0;
+
+  const highlightedNodeIds = new Set<string>();
+  const highlightedEdgeIds = new Set<string>();
+
+  if (hasSymptomHighlight) {
+    // Symptom highlight mode: use the provided node/edge IDs as the highlighted set.
+    // Filter-based matches are still included when the user has also set filters,
+    // but the "match everything when no filter" shortcut is skipped so that
+    // irrelevant nodes are visibly dimmed.
+    for (const id of symptomHighlightNodeIds) {
+      highlightedNodeIds.add(id);
+    }
+
+    for (const id of symptomHighlightEdgeIds) {
+      highlightedEdgeIds.add(id);
+    }
+
+    nodes.forEach((node) => {
+      if (
+        matchedNodeIds.has(node.id) &&
+        symptomHighlightNodeIds.includes(node.id)
+      ) {
+        highlightedNodeIds.add(node.id);
+      }
+    });
+  } else {
+    for (const id of matchedNodeIds) {
+      highlightedNodeIds.add(id);
+    }
+
+    for (const id of matchedEdgeIds) {
+      highlightedEdgeIds.add(id);
+    }
+  }
 
   if (filters.highlightSelectionNeighborhood) {
     if (selection?.kind === 'node') {

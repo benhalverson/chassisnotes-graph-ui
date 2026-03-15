@@ -2,17 +2,26 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
+import type { GraphPhaseTag } from '../../../../core/models/graph.models';
+import { DiagramStore } from '../../../diagram/state/diagram-store';
+import {
+  SuggestionEngine,
+  type DiagnosticSuggestion,
+  type ExperimentHistoryEntry,
+} from '../../data-access/suggestion-engine';
 
-type DiagnosePhase = 'entry' | 'mid' | 'exit' | 'bumps' | 'jumps';
+type DiagnosePhase = Extract<GraphPhaseTag, 'entry' | 'mid' | 'exit' | 'bumps' | 'jumps'>;
 type DiagnoseSymptom =
   | 'push'
   | 'lazy-rotation'
   | 'rear-loose'
   | 'poor-forward-bite';
 
-type SuggestionCard = {
+type StaticSuggestionCard = {
   title: string;
   confidence: 'low' | 'medium' | 'high';
   note: string;
@@ -33,7 +42,7 @@ const SYMPTOM_OPTIONS: Array<{ id: DiagnoseSymptom; label: string }> = [
   { id: 'poor-forward-bite', label: 'Poor forward bite' },
 ];
 
-const SUGGESTIONS: Record<DiagnoseSymptom, SuggestionCard[]> = {
+const STATIC_SUGGESTIONS: Record<DiagnoseSymptom, StaticSuggestionCard[]> = {
   push: [
     {
       title: 'Free up front rotation',
@@ -92,16 +101,124 @@ const SUGGESTIONS: Record<DiagnoseSymptom, SuggestionCard[]> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiagnosePage {
+  private readonly diagramStore = inject(DiagramStore);
+  private readonly suggestionEngine = inject(SuggestionEngine);
+  private readonly router = inject(Router);
+
   protected readonly phaseOptions = PHASE_OPTIONS;
   protected readonly symptomOptions = SYMPTOM_OPTIONS;
   protected readonly selectedPhase = signal<DiagnosePhase>('entry');
   protected readonly selectedSymptom = signal<DiagnoseSymptom>('lazy-rotation');
+
   protected readonly phaseLabel = computed(
     () =>
       this.phaseOptions.find((phase) => phase.id === this.selectedPhase())
         ?.label ?? 'Entry',
   );
-  protected readonly suggestions = computed(
-    () => SUGGESTIONS[this.selectedSymptom()],
+
+  protected readonly symptomLabel = computed(
+    () =>
+      this.symptomOptions.find((s) => s.id === this.selectedSymptom())
+        ?.label ?? 'Lazy rotation',
   );
+
+  protected readonly hasActiveGraph = computed(
+    () => this.diagramStore.hasActiveGraph(),
+  );
+
+  protected readonly activeGraphId = computed(
+    () => this.diagramStore.graph()?.id ?? null,
+  );
+
+  /** Graph-derived suggestions ranked by confidence and evidence strength. */
+  protected readonly graphSuggestions = computed<DiagnosticSuggestion[]>(() => {
+    const nodes = this.diagramStore.nodes();
+    const edges = this.diagramStore.edges();
+
+    if (nodes.length === 0) {
+      return [];
+    }
+
+    return this.suggestionEngine.getSuggestions({
+      symptomLabel: this.symptomLabel(),
+      phase: this.selectedPhase(),
+      nodes,
+      edges,
+    });
+  });
+
+  /** Static fallback suggestions shown when no graph is loaded. */
+  protected readonly staticSuggestions = computed(
+    () => STATIC_SUGGESTIONS[this.selectedSymptom()],
+  );
+
+  /**
+   * Combined suggestions: graph-derived first, then static fallback.
+   * If there are graph-derived suggestions we show only those.
+   */
+  protected readonly suggestions = computed(() => {
+    const graph = this.graphSuggestions();
+
+    return graph.length > 0 ? graph : this.staticSuggestions();
+  });
+
+  protected readonly isGraphDerived = computed(
+    () => this.graphSuggestions().length > 0,
+  );
+
+  /** Experiment history from the loaded graph. */
+  protected readonly experimentHistory = computed<ExperimentHistoryEntry[]>(() => {
+    const nodes = this.diagramStore.nodes();
+    const edges = this.diagramStore.edges();
+
+    return this.suggestionEngine.getExperimentHistory(nodes, edges);
+  });
+
+  protected selectPhase(phase: DiagnosePhase): void {
+    this.selectedPhase.set(phase);
+    this.applySymptomHighlight();
+  }
+
+  protected selectSymptom(symptom: DiagnoseSymptom): void {
+    this.selectedSymptom.set(symptom);
+    this.applySymptomHighlight();
+  }
+
+  protected navigateToGraph(): void {
+    const graphId = this.activeGraphId();
+
+    if (!graphId) {
+      return;
+    }
+
+    void this.router.navigate(['/graphs', graphId]);
+  }
+
+  private applySymptomHighlight(): void {
+    const nodes = this.diagramStore.nodes();
+    const edges = this.diagramStore.edges();
+
+    if (nodes.length === 0) {
+      return;
+    }
+
+    const highlight = this.suggestionEngine.getHighlightSet({
+      symptomLabel: this.symptomLabel(),
+      phase: this.selectedPhase(),
+      nodes,
+      edges,
+    });
+
+    const allHighlightedNodeIds = [
+      ...highlight.symptomNodeIds,
+      ...highlight.setupNodeIds,
+      ...highlight.outcomeNodeIds,
+      ...highlight.experimentNodeIds,
+    ];
+
+    this.diagramStore.setSymptomHighlight(
+      allHighlightedNodeIds,
+      highlight.edgeIds,
+    );
+  }
 }

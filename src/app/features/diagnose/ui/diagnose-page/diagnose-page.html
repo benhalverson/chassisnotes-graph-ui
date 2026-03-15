@@ -12,7 +12,7 @@
 
 		<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
 			<h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Corner phase</h2>
-			<div class="mt-3 flex flex-wrap gap-2">
+			<div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Select corner phase">
 				@for (phase of phaseOptions; track phase.id) {
 					<button
 						type="button"
@@ -22,7 +22,8 @@
 						[class.text-slate-950]="selectedPhase() === phase.id"
 						[class.border-slate-700]="selectedPhase() !== phase.id"
 						[class.text-slate-200]="selectedPhase() !== phase.id"
-						(click)="selectedPhase.set(phase.id)"
+						[attr.aria-pressed]="selectedPhase() === phase.id"
+						(click)="selectPhase(phase.id)"
 					>
 						{{ phase.label }}
 					</button>
@@ -32,7 +33,7 @@
 
 		<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
 			<h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">What does the car do?</h2>
-			<div class="mt-3 grid gap-2 sm:grid-cols-2">
+			<div class="mt-3 grid gap-2 sm:grid-cols-2" role="group" aria-label="Select symptom">
 				@for (symptom of symptomOptions; track symptom.id) {
 					<button
 						type="button"
@@ -41,7 +42,8 @@
 						[class.bg-amber-500/10]="selectedSymptom() === symptom.id"
 						[class.border-slate-800]="selectedSymptom() !== symptom.id"
 						[class.bg-slate-950/40]="selectedSymptom() !== symptom.id"
-						(click)="selectedSymptom.set(symptom.id)"
+						[attr.aria-pressed]="selectedSymptom() === symptom.id"
+						(click)="selectSymptom(symptom.id)"
 					>
 						<span class="text-sm font-semibold text-slate-100">{{ symptom.label }}</span>
 						<span class="mt-1 block text-sm text-slate-400">Phase focus: {{ phaseLabel() }}</span>
@@ -50,18 +52,111 @@
 			</div>
 		</section>
 
-		<section class="grid gap-3 lg:grid-cols-2">
-			@for (suggestion of suggestions(); track suggestion.title) {
-				<article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg font-semibold tracking-tight">{{ suggestion.title }}</h2>
-						<span class="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
-							{{ suggestion.confidence }}
-						</span>
-					</div>
-					<p class="mt-3 text-sm text-slate-300">{{ suggestion.note }}</p>
-				</article>
+		<section aria-label="Suggested adjustments">
+			<div class="mb-3 flex items-center justify-between gap-2">
+				<h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Suggested adjustments</h2>
+				@if (isGraphDerived()) {
+					<span class="rounded-full bg-emerald-900/60 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-emerald-300">
+						From your graph
+					</span>
+				} @else {
+					<span class="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">
+						General guidance
+					</span>
+				}
+			</div>
+
+			<div class="grid gap-3 lg:grid-cols-2">
+				@for (suggestion of suggestions(); track suggestion.title) {
+					<article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+						<div class="flex items-center justify-between gap-2">
+							<h3 class="text-lg font-semibold tracking-tight">{{ suggestion.title }}</h3>
+							<span
+								class="rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em]"
+								[class.bg-emerald-900/60]="suggestion.confidence === 'high'"
+								[class.text-emerald-300]="suggestion.confidence === 'high'"
+								[class.bg-amber-900/60]="suggestion.confidence === 'medium'"
+								[class.text-amber-300]="suggestion.confidence === 'medium'"
+								[class.bg-slate-800]="suggestion.confidence === 'low'"
+								[class.text-slate-400]="suggestion.confidence === 'low'"
+								[attr.aria-label]="suggestion.confidence + ' confidence'"
+							>
+								{{ suggestion.confidence }}
+							</span>
+						</div>
+						@if ($any(suggestion).note; as note) {
+							<p class="mt-3 text-sm text-slate-300">{{ note }}</p>
+						}
+						@if ($any(suggestion).reasoning; as reasoning) {
+							<p class="mt-3 text-sm text-slate-400">{{ reasoning }}</p>
+						}
+					</article>
+				}
+			</div>
+
+			@if (suggestions().length === 0) {
+				<p class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
+					No suggestions found for the current symptom and phase. Add symptom and setup nodes to your graph to generate recommendations.
+				</p>
 			}
 		</section>
+
+		@if (hasActiveGraph()) {
+			<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+				<div class="flex items-center justify-between gap-2">
+					<h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Graph view</h2>
+					<button
+						type="button"
+						class="rounded-full border border-amber-400 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
+						(click)="navigateToGraph()"
+					>
+						View highlighted in graph →
+					</button>
+				</div>
+				<p class="mt-2 text-xs text-slate-400">
+					Relevant nodes and relationships for <strong class="font-semibold text-slate-300">{{ symptomLabel() }}</strong> during <strong class="font-semibold text-slate-300">{{ phaseLabel() }}</strong> are highlighted in the map.
+				</p>
+			</section>
+		}
+
+		@if (experimentHistory().length > 0) {
+			<section aria-label="Experiment history">
+				<h2 class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Experiment history</h2>
+				<ul class="flex flex-col gap-2" role="list">
+					@for (entry of experimentHistory(); track entry.id) {
+						<li class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+							<div class="flex items-start justify-between gap-2">
+								<div>
+									<p class="text-sm font-semibold text-slate-100">{{ entry.title }}</p>
+									<p class="mt-1 text-sm text-slate-300">
+										Result: <span class="font-medium">{{ entry.outcome }}</span>
+									</p>
+									@if (entry.phaseTags.length > 0) {
+										<div class="mt-2 flex flex-wrap gap-1" aria-label="Phase tags">
+											@for (tag of entry.phaseTags; track tag) {
+												<span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{{ tag }}</span>
+											}
+										</div>
+									}
+								</div>
+								<span
+									class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.15em]"
+									[class.bg-emerald-900/60]="entry.confidence === 'high'"
+									[class.text-emerald-300]="entry.confidence === 'high'"
+									[class.bg-amber-900/60]="entry.confidence === 'medium'"
+									[class.text-amber-300]="entry.confidence === 'medium'"
+									[class.bg-slate-800]="entry.confidence === 'low'"
+									[class.text-slate-400]="entry.confidence === 'low'"
+									[attr.aria-label]="entry.confidence + ' confidence'"
+								>
+									{{ entry.confidence }}
+								</span>
+							</div>
+						</li>
+					}
+				</ul>
+			</section>
+		}
 	</section>
 </main>
+
