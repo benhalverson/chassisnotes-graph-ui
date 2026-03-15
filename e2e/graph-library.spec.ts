@@ -40,7 +40,9 @@ test('duplicates a saved graph and confirms delete flows from the library', asyn
   await originalCard.getByRole('button', { name: 'Duplicate' }).click();
   await expect(page).toHaveURL(/\/graphs\//);
   await expect(
-    page.getByRole('heading', { name: '2WD Buggy Carpet Baseline Copy' }).first(),
+    page
+      .getByRole('heading', { name: '2WD Buggy Carpet Baseline Copy' })
+      .first(),
   ).toBeVisible();
 
   await returnToLibrary(page);
