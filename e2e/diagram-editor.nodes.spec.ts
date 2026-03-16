@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import {
   createBaselineGraph,
+  expectMobileNodeInspectorForm,
   openGraphFromLibrary,
+  openMobilePaletteDialog,
   resetApp,
   returnToLibrary,
 } from './test-helpers';
@@ -15,9 +17,10 @@ test('adds, edits, and deletes nodes with persistence after reopening from the l
 }) => {
   await createBaselineGraph(page);
 
-  const nodeForm = page.locator('form[aria-label="Node inspector form"]');
+  const paletteDialog = await openMobilePaletteDialog(page);
+  await paletteDialog.getByRole('button', { name: /^Setup/i }).click();
 
-  await page.getByRole('button', { name: /^Setup/i }).click();
+  let nodeForm = await expectMobileNodeInspectorForm(page);
   await expect(nodeForm).toBeVisible();
   await nodeForm.getByLabel('Title').fill('Front spring 2.6');
   await nodeForm.getByLabel('Subtype').fill('front-spring');
@@ -34,7 +37,17 @@ test('adds, edits, and deletes nodes with persistence after reopening from the l
   await expect(page.getByLabel('Front spring 2.6')).toBeVisible();
   await expect(nodeForm.getByLabel('Title')).toHaveValue('Front spring 2.6');
 
-  await page.getByRole('button', { name: /^Experiment/i }).click();
+  await page
+    .getByRole('dialog', { name: 'Inspector' })
+    .getByRole('button', { name: 'Close' })
+    .click();
+
+  const experimentPaletteDialog = await openMobilePaletteDialog(page);
+  await experimentPaletteDialog
+    .getByRole('button', { name: /^Experiment/i })
+    .click();
+
+  nodeForm = await expectMobileNodeInspectorForm(page);
   await nodeForm.getByLabel('Title').fill('Lower rear ride height');
   await nodeForm
     .getByLabel('Description')

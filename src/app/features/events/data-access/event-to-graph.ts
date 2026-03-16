@@ -127,8 +127,8 @@ export class EventToGraphService {
     // Create condition→symptom edge if not already present
     const edgeExists = updatedEdges.some(
       (e) =>
-        e.sourceNodeId === conditionNode!.id &&
-        e.targetNodeId === symptomNode!.id,
+        e.sourceNodeId === conditionNode.id &&
+        e.targetNodeId === symptomNode.id,
     );
     if (!edgeExists) {
       updatedEdges.push(
@@ -276,11 +276,11 @@ export class EventToGraphService {
     }
 
     // Create experiment→outcome edge if experiment exists
-    if (experimentNode) {
+    if (experimentNode && outcomeNode) {
       const edgeExists = updatedEdges.some(
         (e) =>
           e.sourceNodeId === experimentNode.id &&
-          e.targetNodeId === outcomeNode!.id,
+          e.targetNodeId === outcomeNode.id,
       );
       if (!edgeExists) {
         updatedEdges.push(

@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { createBaselineGraph, resetApp } from './test-helpers';
+import {
+  createBaselineGraph,
+  expectMobileNodeInspectorForm,
+  openMobilePaletteDialog,
+  resetApp,
+} from './test-helpers';
 
 test.beforeEach(async ({ page }) => {
   await resetApp(page);
@@ -22,12 +27,15 @@ test('adds a setup node, edits it in the inspector, and persists after reload', 
 }) => {
   await createBaselineGraph(page);
 
-  await page.getByRole('button', { name: /^Setup/i }).click();
-  await page.getByLabel('Title').fill('Camber shim');
-  await page
+  const paletteDialog = await openMobilePaletteDialog(page);
+  await paletteDialog.getByRole('button', { name: /^Setup/i }).click();
+
+  const nodeForm = await expectMobileNodeInspectorForm(page);
+  await nodeForm.getByLabel('Title').fill('Camber shim');
+  await nodeForm
     .getByLabel('Description')
     .fill('Added for e2e persistence coverage.');
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await nodeForm.getByRole('button', { name: 'Save changes' }).click();
 
   await expect(page.getByLabel('Camber shim')).toBeVisible();
 
@@ -41,8 +49,10 @@ test('dims non-matching nodes when a category filter is applied', async ({
 }) => {
   await createBaselineGraph(page);
 
+  const paletteDialog = await openMobilePaletteDialog(page);
+
   await expect(page.getByLabel('Rear oil 32.5wt')).toBeVisible();
-  await page.getByLabel('setup').check();
+  await paletteDialog.getByLabel('setup').check();
 
   await expect(page.getByLabel('Rear oil 32.5wt')).not.toHaveClass(
     /opacity-45/,

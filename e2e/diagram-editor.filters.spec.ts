@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { createGraphFromTemplate, resetApp } from './test-helpers';
+import {
+  createGraphFromTemplate,
+  openMobilePaletteDialog,
+  resetApp,
+} from './test-helpers';
 
 test.beforeEach(async ({ page }) => {
   await resetApp(page);
@@ -10,7 +14,8 @@ test('applies phase, confidence, and evidence filters and then clears them', asy
 }) => {
   await createGraphFromTemplate(page, 'Symptom-Driven Troubleshooting Map');
 
-  const filters = page.locator('section[aria-label="Graph filters"]');
+  const paletteDialog = await openMobilePaletteDialog(page);
+  const filters = paletteDialog.locator('section[aria-label="Graph filters"]');
   const canvas = page.getByLabel('Diagram canvas');
   const entryPushNode = page.getByLabel('Entry push');
   const exitInstabilityNode = page.getByLabel('Exit instability');

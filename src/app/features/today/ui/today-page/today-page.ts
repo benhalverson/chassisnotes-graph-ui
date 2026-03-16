@@ -12,7 +12,6 @@ import type {
   PersistedGraphDocument,
   TemplateRecord,
 } from '../../../../core/models/graph.models';
-import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import { QuickLogDialog } from '../../../events/ui/quick-log-dialog/quick-log-dialog';
 
 @Component({
@@ -87,7 +86,9 @@ export class TodayPage {
     this.showQuickLogDialog.set(false);
   }
 
-  protected async onEventLogged(updatedDocument: PersistedGraphDocument): Promise<void> {
+  protected async onEventLogged(
+    updatedDocument: PersistedGraphDocument,
+  ): Promise<void> {
     await this.graphsRepository.saveGraphDocument(updatedDocument);
     this.activeDocument.set(updatedDocument);
     await this.loadDashboard();
@@ -103,9 +104,6 @@ export class TodayPage {
   }
 
   private async openQuickLog(): Promise<void> {
-  private async navigateToQuickAdd(
-    nodeType: 'experiment' | 'symptom',
-  ): Promise<void> {
     const graphId = await this.ensureActiveGraphId();
 
     if (!graphId) {

@@ -8,15 +8,11 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { combineLatest, distinctUntilChanged, map } from 'rxjs';
-import type {
-  GraphNodeType,
-  GraphRecord,
-  PersistedGraphDocument,
-} from '../../../../core/models/graph.models';
 import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import type {
   GraphNodeType,
   GraphRecord,
+  PersistedGraphDocument,
 } from '../../../../core/models/graph.models';
 import { DiagramStore } from '../../../diagram/state/diagram-store';
 import { EditorShell } from '../../../diagram/ui/editor-shell/editor-shell';

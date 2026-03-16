@@ -78,6 +78,27 @@ export async function expectEditorLoaded(
   ).toBeVisible();
 }
 
+export async function openMobilePaletteDialog(page: Page): Promise<Locator> {
+  await page.getByRole('button', { name: 'Palette + Filters' }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Palette and filters' });
+  await expect(dialog).toBeVisible();
+
+  return dialog;
+}
+
+export async function expectMobileNodeInspectorForm(
+  page: Page,
+): Promise<Locator> {
+  const dialog = page.getByRole('dialog', { name: 'Inspector' });
+  await expect(dialog).toBeVisible();
+
+  const form = dialog.getByRole('form', { name: 'Node inspector form' });
+  await expect(form).toBeVisible();
+
+  return form;
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

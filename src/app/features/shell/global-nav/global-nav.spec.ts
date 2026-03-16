@@ -36,19 +36,21 @@ describe('GlobalNav', () => {
   });
 
   it('should render all nav links', () => {
-    const links: HTMLAnchorElement[] = Array.from(
-      fixture.nativeElement.querySelectorAll('nav a'),
+    const nav: HTMLElement = fixture.nativeElement.querySelector(
+      'nav[aria-label="Main navigation"]',
     );
+    const links: HTMLAnchorElement[] = Array.from(nav.querySelectorAll('a'));
     const labels = links.map((l) => l.textContent?.trim());
     expect(labels).toContain('Graphs');
     expect(labels).toContain('Diagnose');
-    expect(labels).toContain('Templates');
+    expect(labels).toContain('Garage');
   });
 
   it('should have 3 nav links plus the brand link', () => {
-    const links: HTMLAnchorElement[] = Array.from(
-      fixture.nativeElement.querySelectorAll('nav a'),
+    const nav: HTMLElement = fixture.nativeElement.querySelector(
+      'nav[aria-label="Main navigation"]',
     );
+    const links: HTMLAnchorElement[] = Array.from(nav.querySelectorAll('a'));
     expect(links.length).toBe(4); // brand + 3 nav links
   });
 });

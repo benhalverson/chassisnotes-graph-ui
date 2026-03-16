@@ -1,4 +1,5 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 
 import { CanvasToolbar } from './canvas-toolbar';
 
@@ -20,10 +21,26 @@ describe('CanvasToolbar', () => {
     const buttons = Array.from(
       fixture.nativeElement.querySelectorAll('button'),
     ) as HTMLButtonElement[];
-    const viewportButtons = buttons.slice(1);
+    const importExportButton = buttons.find(
+      (button) => button.textContent?.trim() === 'Import / Export',
+    ) as HTMLButtonElement;
+    const fitButton = buttons.find(
+      (button) =>
+        (button as HTMLButtonElement).textContent?.trim() === 'Fit view',
+    ) as HTMLButtonElement;
+    const zoomInButton = buttons.find(
+      (button) =>
+        (button as HTMLButtonElement).textContent?.trim() === 'Zoom in',
+    ) as HTMLButtonElement;
+    const zoomOutButton = buttons.find(
+      (button) =>
+        (button as HTMLButtonElement).textContent?.trim() === 'Zoom out',
+    ) as HTMLButtonElement;
 
-    expect(buttons[0]?.disabled).toBe(false);
-    expect(viewportButtons.every((button) => button.disabled)).toBe(true);
+    expect(importExportButton.disabled).toBe(false);
+    expect(fitButton.disabled).toBe(true);
+    expect(zoomInButton.disabled).toBe(true);
+    expect(zoomOutButton.disabled).toBe(true);
   });
 
   it('emits fit and zoom actions when controls are enabled', () => {
@@ -45,10 +62,23 @@ describe('CanvasToolbar', () => {
       fixture.nativeElement.querySelectorAll('button'),
     ) as HTMLButtonElement[];
 
-    buttons[0]?.click();
-    buttons[1]?.click();
-    buttons[2]?.click();
-    buttons[3]?.click();
+    const importExportButton = buttons.find(
+      (button) => button.textContent?.trim() === 'Import / Export',
+    );
+    const fitButton = buttons.find(
+      (button) => button.textContent?.trim() === 'Fit view',
+    );
+    const zoomInButton = buttons.find(
+      (button) => button.textContent?.trim() === 'Zoom in',
+    );
+    const zoomOutButton = buttons.find(
+      (button) => button.textContent?.trim() === 'Zoom out',
+    );
+
+    importExportButton?.click();
+    fitButton?.click();
+    zoomInButton?.click();
+    zoomOutButton?.click();
 
     expect(fitSpy).toHaveBeenCalledTimes(1);
     expect(zoomInSpy).toHaveBeenCalledTimes(1);
