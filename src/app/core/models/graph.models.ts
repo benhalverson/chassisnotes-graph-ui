@@ -204,7 +204,10 @@ export interface SessionRecord {
 }
 
 // Event types
-export type RacingEventType = 'record-symptom' | 'log-setup-change' | 'record-result';
+export type RacingEventType =
+  | 'record-symptom'
+  | 'log-setup-change'
+  | 'record-result';
 
 // Event data payloads
 export interface RecordSymptomData {

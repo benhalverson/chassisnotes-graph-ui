@@ -23,7 +23,11 @@ describe('EventToGraphService', () => {
     updatedAt: '2024-01-01T00:00:00Z',
     version: 1,
   };
-  const emptyDocument: PersistedGraphDocument = { graph: baseGraph, nodes: [], edges: [] };
+  const emptyDocument: PersistedGraphDocument = {
+    graph: baseGraph,
+    nodes: [],
+    edges: [],
+  };
   const timestamp = '2024-06-01T10:00:00Z';
 
   beforeEach(() => {
@@ -43,7 +47,11 @@ describe('EventToGraphService', () => {
           sessionId: 'session-1',
           graphId,
           type: 'record-symptom',
-          data: { symptom: 'Entry push', cornerPhase: 'entry', confidence: 'medium' },
+          data: {
+            symptom: 'Entry push',
+            cornerPhase: 'entry',
+            confidence: 'medium',
+          },
           createdAt: timestamp,
         },
         emptyDocument,
@@ -60,7 +68,9 @@ describe('EventToGraphService', () => {
       expect(symptomNode?.confidence).toBe('medium');
 
       const edge = result.edges.find(
-        (e) => e.sourceNodeId === conditionNode?.id && e.targetNodeId === symptomNode?.id,
+        (e) =>
+          e.sourceNodeId === conditionNode?.id &&
+          e.targetNodeId === symptomNode?.id,
       );
       expect(edge).toBeDefined();
       expect(edge?.relationshipType).toBe('influences');
@@ -94,7 +104,11 @@ describe('EventToGraphService', () => {
           sessionId: 'session-1',
           graphId,
           type: 'record-symptom',
-          data: { symptom: 'entry push', cornerPhase: 'entry', confidence: 'high' },
+          data: {
+            symptom: 'entry push',
+            cornerPhase: 'entry',
+            confidence: 'high',
+          },
           createdAt: timestamp,
         },
         docWithSymptom,
@@ -163,13 +177,19 @@ describe('EventToGraphService', () => {
           sessionId: 'session-1',
           graphId,
           type: 'record-symptom',
-          data: { symptom: 'entry push', cornerPhase: 'entry', confidence: 'medium' },
+          data: {
+            symptom: 'entry push',
+            cornerPhase: 'entry',
+            confidence: 'medium',
+          },
           createdAt: timestamp,
         },
         doc,
       );
 
-      const influenceEdges = result.edges.filter((e) => e.relationshipType === 'influences');
+      const influenceEdges = result.edges.filter(
+        (e) => e.relationshipType === 'influences',
+      );
       expect(influenceEdges).toHaveLength(1);
     });
   });
@@ -182,7 +202,12 @@ describe('EventToGraphService', () => {
           sessionId: 'session-1',
           graphId,
           type: 'log-setup-change',
-          data: { component: 'Front spring', fromValue: '1.4', toValue: '1.6', reason: 'entry push' },
+          data: {
+            component: 'Front spring',
+            fromValue: '1.4',
+            toValue: '1.6',
+            reason: 'entry push',
+          },
           createdAt: timestamp,
         },
         emptyDocument,
@@ -200,12 +225,16 @@ describe('EventToGraphService', () => {
       expect(setupNode?.title).toBe('Front spring');
 
       const symptomToExperiment = result.edges.find(
-        (e) => e.sourceNodeId === symptomNode?.id && e.targetNodeId === experimentNode?.id,
+        (e) =>
+          e.sourceNodeId === symptomNode?.id &&
+          e.targetNodeId === experimentNode?.id,
       );
       expect(symptomToExperiment?.relationshipType).toBe('observed');
 
       const experimentToSetup = result.edges.find(
-        (e) => e.sourceNodeId === experimentNode?.id && e.targetNodeId === setupNode?.id,
+        (e) =>
+          e.sourceNodeId === experimentNode?.id &&
+          e.targetNodeId === setupNode?.id,
       );
       expect(experimentToSetup?.relationshipType).toBe('tested');
     });
@@ -226,7 +255,11 @@ describe('EventToGraphService', () => {
         createdAt: timestamp,
         updatedAt: timestamp,
       };
-      const doc: PersistedGraphDocument = { graph: baseGraph, nodes: [existingSymptom], edges: [] };
+      const doc: PersistedGraphDocument = {
+        graph: baseGraph,
+        nodes: [existingSymptom],
+        edges: [],
+      };
 
       const result = service.applyEvent(
         {
@@ -234,7 +267,12 @@ describe('EventToGraphService', () => {
           sessionId: 'session-1',
           graphId,
           type: 'log-setup-change',
-          data: { component: 'Rear spring', fromValue: '1.2', toValue: '1.4', reason: 'entry push' },
+          data: {
+            component: 'Rear spring',
+            fromValue: '1.2',
+            toValue: '1.4',
+            reason: 'entry push',
+          },
           createdAt: timestamp,
         },
         doc,
@@ -263,7 +301,11 @@ describe('EventToGraphService', () => {
         createdAt: timestamp,
         updatedAt: timestamp,
       };
-      const doc: PersistedGraphDocument = { graph: baseGraph, nodes: [experimentNode], edges: [] };
+      const doc: PersistedGraphDocument = {
+        graph: baseGraph,
+        nodes: [experimentNode],
+        edges: [],
+      };
 
       const result = service.applyEvent(
         {
@@ -271,7 +313,11 @@ describe('EventToGraphService', () => {
           sessionId: 'session-1',
           graphId,
           type: 'record-result',
-          data: { outcome: 'reduced push', effect: 'improved', notes: 'felt much better' },
+          data: {
+            outcome: 'reduced push',
+            effect: 'improved',
+            notes: 'felt much better',
+          },
           createdAt: timestamp,
         },
         doc,
@@ -282,7 +328,9 @@ describe('EventToGraphService', () => {
       expect(outcomeNode?.title).toBe('reduced push');
 
       const edge = result.edges.find(
-        (e) => e.sourceNodeId === experimentNode.id && e.targetNodeId === outcomeNode?.id,
+        (e) =>
+          e.sourceNodeId === experimentNode.id &&
+          e.targetNodeId === outcomeNode?.id,
       );
       expect(edge).toBeDefined();
       expect(edge?.relationshipType).toBe('observed');

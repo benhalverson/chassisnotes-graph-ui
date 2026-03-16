@@ -20,7 +20,10 @@ export interface EventApplicationResult {
   providedIn: 'root',
 })
 export class EventToGraphService {
-  applyEvent(event: RacingEventRecord, document: PersistedGraphDocument): EventApplicationResult {
+  applyEvent(
+    event: RacingEventRecord,
+    document: PersistedGraphDocument,
+  ): EventApplicationResult {
     const nodes = [...document.nodes];
     const edges = [...document.edges];
     const graphId = document.graph.id;
@@ -28,11 +31,29 @@ export class EventToGraphService {
 
     switch (event.type) {
       case 'record-symptom':
-        return this.applyRecordSymptom(event.data as RecordSymptomData, graphId, nodes, edges, timestamp);
+        return this.applyRecordSymptom(
+          event.data as RecordSymptomData,
+          graphId,
+          nodes,
+          edges,
+          timestamp,
+        );
       case 'log-setup-change':
-        return this.applyLogSetupChange(event.data as LogSetupChangeData, graphId, nodes, edges, timestamp);
+        return this.applyLogSetupChange(
+          event.data as LogSetupChangeData,
+          graphId,
+          nodes,
+          edges,
+          timestamp,
+        );
       case 'record-result':
-        return this.applyRecordResult(event.data as RecordResultData, graphId, nodes, edges, timestamp);
+        return this.applyRecordResult(
+          event.data as RecordResultData,
+          graphId,
+          nodes,
+          edges,
+          timestamp,
+        );
       default:
         return { nodes, edges };
     }
@@ -50,34 +71,76 @@ export class EventToGraphService {
 
     // Find or create condition node for corner phase
     let conditionNode = updatedNodes.find(
-      (n) => n.type === 'condition' && n.title.toLowerCase() === data.cornerPhase.toLowerCase()
+      (n) =>
+        n.type === 'condition' &&
+        n.title.toLowerCase() === data.cornerPhase.toLowerCase(),
     );
     if (!conditionNode) {
-      conditionNode = createNode(graphId, 'condition', '', data.cornerPhase, '', [data.cornerPhase], data.confidence, timestamp, updatedNodes);
+      conditionNode = createNode(
+        graphId,
+        'condition',
+        '',
+        data.cornerPhase,
+        '',
+        [data.cornerPhase],
+        data.confidence,
+        timestamp,
+        updatedNodes,
+      );
       updatedNodes.push(conditionNode);
     }
 
     // Find or create symptom node
     let symptomNode = updatedNodes.find(
-      (n) => n.type === 'symptom' && n.title.toLowerCase() === data.symptom.toLowerCase()
+      (n) =>
+        n.type === 'symptom' &&
+        n.title.toLowerCase() === data.symptom.toLowerCase(),
     );
     if (!symptomNode) {
-      symptomNode = createNode(graphId, 'symptom', '', data.symptom, '', [data.cornerPhase], data.confidence, timestamp, updatedNodes);
+      symptomNode = createNode(
+        graphId,
+        'symptom',
+        '',
+        data.symptom,
+        '',
+        [data.cornerPhase],
+        data.confidence,
+        timestamp,
+        updatedNodes,
+      );
       updatedNodes.push(symptomNode);
     } else {
       // Update phaseTags and confidence if the node already exists
       const idx = updatedNodes.indexOf(symptomNode);
-      const merged: GraphPhaseTag[] = Array.from(new Set([...symptomNode.phaseTags, data.cornerPhase])) as GraphPhaseTag[];
-      symptomNode = { ...symptomNode, phaseTags: merged, confidence: data.confidence as ConfidenceLevel, updatedAt: timestamp };
+      const merged: GraphPhaseTag[] = Array.from(
+        new Set([...symptomNode.phaseTags, data.cornerPhase]),
+      ) as GraphPhaseTag[];
+      symptomNode = {
+        ...symptomNode,
+        phaseTags: merged,
+        confidence: data.confidence as ConfidenceLevel,
+        updatedAt: timestamp,
+      };
       updatedNodes[idx] = symptomNode;
     }
 
     // Create condition→symptom edge if not already present
     const edgeExists = updatedEdges.some(
-      (e) => e.sourceNodeId === conditionNode!.id && e.targetNodeId === symptomNode!.id
+      (e) =>
+        e.sourceNodeId === conditionNode!.id &&
+        e.targetNodeId === symptomNode!.id,
     );
     if (!edgeExists) {
-      updatedEdges.push(createEdge(graphId, conditionNode.id, symptomNode.id, 'influences', [data.cornerPhase], timestamp));
+      updatedEdges.push(
+        createEdge(
+          graphId,
+          conditionNode.id,
+          symptomNode.id,
+          'influences',
+          [data.cornerPhase],
+          timestamp,
+        ),
+      );
     }
 
     return { nodes: updatedNodes, edges: updatedEdges };
@@ -95,31 +158,83 @@ export class EventToGraphService {
 
     // Find or create symptom node from reason
     let symptomNode = updatedNodes.find(
-      (n) => n.type === 'symptom' && n.title.toLowerCase() === data.reason.toLowerCase()
+      (n) =>
+        n.type === 'symptom' &&
+        n.title.toLowerCase() === data.reason.toLowerCase(),
     );
     if (!symptomNode) {
-      symptomNode = createNode(graphId, 'symptom', '', data.reason, '', [], 'low', timestamp, updatedNodes);
+      symptomNode = createNode(
+        graphId,
+        'symptom',
+        '',
+        data.reason,
+        '',
+        [],
+        'low',
+        timestamp,
+        updatedNodes,
+      );
       updatedNodes.push(symptomNode);
     }
 
     // Create experiment node
     const experimentTitle = `${data.component}: ${data.fromValue} → ${data.toValue}`;
-    const experimentNode = createNode(graphId, 'experiment', data.component, experimentTitle, `Changed from ${data.fromValue} to ${data.toValue}`, [], 'low', timestamp, updatedNodes);
+    const experimentNode = createNode(
+      graphId,
+      'experiment',
+      data.component,
+      experimentTitle,
+      `Changed from ${data.fromValue} to ${data.toValue}`,
+      [],
+      'low',
+      timestamp,
+      updatedNodes,
+    );
     updatedNodes.push(experimentNode);
 
     // Find or create setup node
     let setupNode = updatedNodes.find(
-      (n) => n.type === 'setup' && n.title.toLowerCase() === data.component.toLowerCase()
+      (n) =>
+        n.type === 'setup' &&
+        n.title.toLowerCase() === data.component.toLowerCase(),
     );
     if (!setupNode) {
-      setupNode = createNode(graphId, 'setup', '', data.component, '', [], 'low', timestamp, updatedNodes);
+      setupNode = createNode(
+        graphId,
+        'setup',
+        '',
+        data.component,
+        '',
+        [],
+        'low',
+        timestamp,
+        updatedNodes,
+      );
       updatedNodes.push(setupNode);
     }
 
     // Create symptom→experiment edge ('observed')
-    updatedEdges.push(createEdge(graphId, symptomNode.id, experimentNode.id, 'observed', [], timestamp));
+    updatedEdges.push(
+      createEdge(
+        graphId,
+        symptomNode.id,
+        experimentNode.id,
+        'observed',
+        [],
+        timestamp,
+      ),
+    );
     // Create experiment→setup edge ('tested')
-    updatedEdges.push(createEdge(graphId, experimentNode.id, setupNode.id, 'tested', [], timestamp));
+    updatedEdges.push(
+      createEdge(
+        graphId,
+        experimentNode.id,
+        setupNode.id,
+        'tested',
+        [],
+        timestamp,
+      ),
+    );
 
     return { nodes: updatedNodes, edges: updatedEdges };
   }
@@ -141,20 +256,44 @@ export class EventToGraphService {
 
     // Find or create outcome node
     let outcomeNode = updatedNodes.find(
-      (n) => n.type === 'outcome' && n.title.toLowerCase() === data.outcome.toLowerCase()
+      (n) =>
+        n.type === 'outcome' &&
+        n.title.toLowerCase() === data.outcome.toLowerCase(),
     );
     if (!outcomeNode) {
-      outcomeNode = createNode(graphId, 'outcome', '', data.outcome, data.notes, [], 'low', timestamp, updatedNodes);
+      outcomeNode = createNode(
+        graphId,
+        'outcome',
+        '',
+        data.outcome,
+        data.notes,
+        [],
+        'low',
+        timestamp,
+        updatedNodes,
+      );
       updatedNodes.push(outcomeNode);
     }
 
     // Create experiment→outcome edge if experiment exists
     if (experimentNode) {
       const edgeExists = updatedEdges.some(
-        (e) => e.sourceNodeId === experimentNode.id && e.targetNodeId === outcomeNode!.id
+        (e) =>
+          e.sourceNodeId === experimentNode.id &&
+          e.targetNodeId === outcomeNode!.id,
       );
       if (!edgeExists) {
-        updatedEdges.push(createEdge(graphId, experimentNode.id, outcomeNode.id, 'observed', [], timestamp, data.notes));
+        updatedEdges.push(
+          createEdge(
+            graphId,
+            experimentNode.id,
+            outcomeNode.id,
+            'observed',
+            [],
+            timestamp,
+            data.notes,
+          ),
+        );
       }
     }
 
@@ -163,11 +302,16 @@ export class EventToGraphService {
 }
 
 function createId(prefix: string): string {
-  const randomValue = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const randomValue =
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   return `${prefix}-${randomValue}`;
 }
 
-function nextPosition(existingNodes: GraphNodeRecord[]): { x: number; y: number } {
+function nextPosition(existingNodes: GraphNodeRecord[]): {
+  x: number;
+  y: number;
+} {
   if (existingNodes.length === 0) {
     return { x: 100, y: 100 };
   }

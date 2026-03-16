@@ -13,7 +13,10 @@ export class SessionsRepository {
 
   async listByGraph(graphId: string): Promise<SessionRecord[]> {
     if (!this.isBrowser) return [];
-    return this.db.sessions.where('graphId').equals(graphId).sortBy('updatedAt');
+    return this.db.sessions
+      .where('graphId')
+      .equals(graphId)
+      .sortBy('updatedAt');
   }
 
   async get(sessionId: string): Promise<SessionRecord | undefined> {

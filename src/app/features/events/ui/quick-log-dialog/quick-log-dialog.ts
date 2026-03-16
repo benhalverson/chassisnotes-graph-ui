@@ -10,7 +10,10 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { PersistedGraphDocument } from '../../../../core/models/graph.models';
-import { CONFIDENCE_LEVELS, GRAPH_PHASE_TAGS } from '../../../../core/models/graph.models';
+import {
+  CONFIDENCE_LEVELS,
+  GRAPH_PHASE_TAGS,
+} from '../../../../core/models/graph.models';
 import { DiagramStore } from '../../../diagram/state/diagram-store';
 import { EventsStore } from '../../state/events-store';
 
@@ -49,8 +52,14 @@ export class QuickLogDialog implements OnInit {
 
   protected readonly symptomForm = this.fb.group({
     symptom: ['', [Validators.required, Validators.minLength(2)]],
-    cornerPhase: ['entry' as (typeof GRAPH_PHASE_TAGS)[number], Validators.required],
-    confidence: ['low' as (typeof CONFIDENCE_LEVELS)[number], Validators.required],
+    cornerPhase: [
+      'entry' as (typeof GRAPH_PHASE_TAGS)[number],
+      Validators.required,
+    ],
+    confidence: [
+      'low' as (typeof CONFIDENCE_LEVELS)[number],
+      Validators.required,
+    ],
   });
 
   protected readonly changeForm = this.fb.group({
@@ -62,7 +71,10 @@ export class QuickLogDialog implements OnInit {
 
   protected readonly resultForm = this.fb.group({
     outcome: ['', [Validators.required, Validators.minLength(2)]],
-    effect: ['improved' as 'improved' | 'worsened' | 'no-change', Validators.required],
+    effect: [
+      'improved' as 'improved' | 'worsened' | 'no-change',
+      Validators.required,
+    ],
     notes: [''],
   });
 
@@ -102,7 +114,9 @@ export class QuickLogDialog implements OnInit {
         document,
       );
       this.symptomForm.reset({ cornerPhase: 'entry', confidence: 'low' });
-      this.successMessage.set(`Symptom "${symptom}" recorded and graph updated.`);
+      this.successMessage.set(
+        `Symptom "${symptom}" recorded and graph updated.`,
+      );
       this.eventLogged.emit(updatedDocument);
     } catch (error) {
       this.errorMessage.set(
@@ -116,7 +130,8 @@ export class QuickLogDialog implements OnInit {
   protected async submitChange(): Promise<void> {
     if (this.changeForm.invalid || this.busy()) return;
 
-    const { component, fromValue, toValue, reason } = this.changeForm.getRawValue();
+    const { component, fromValue, toValue, reason } =
+      this.changeForm.getRawValue();
     if (!component || !fromValue || !toValue || !reason) return;
 
     const document = this.currentDocument();
@@ -135,7 +150,9 @@ export class QuickLogDialog implements OnInit {
         document,
       );
       this.changeForm.reset();
-      this.successMessage.set(`Setup change "${component}" logged and graph updated.`);
+      this.successMessage.set(
+        `Setup change "${component}" logged and graph updated.`,
+      );
       this.eventLogged.emit(updatedDocument);
     } catch (error) {
       this.errorMessage.set(
@@ -168,7 +185,9 @@ export class QuickLogDialog implements OnInit {
         document,
       );
       this.resultForm.reset({ effect: 'improved' });
-      this.successMessage.set(`Result "${outcome}" recorded and graph updated.`);
+      this.successMessage.set(
+        `Result "${outcome}" recorded and graph updated.`,
+      );
       this.eventLogged.emit(updatedDocument);
     } catch (error) {
       this.errorMessage.set(

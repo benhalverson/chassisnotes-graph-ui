@@ -8,7 +8,11 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { combineLatest, distinctUntilChanged, map } from 'rxjs';
-import type { GraphNodeType, GraphRecord, PersistedGraphDocument } from '../../../../core/models/graph.models';
+import type {
+  GraphNodeType,
+  GraphRecord,
+  PersistedGraphDocument,
+} from '../../../../core/models/graph.models';
 import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import type {
   GraphNodeType,
@@ -71,7 +75,9 @@ export class MapHomePage {
     this.showQuickLog.set(false);
   }
 
-  protected async onEventLogged(updatedDocument: PersistedGraphDocument): Promise<void> {
+  protected async onEventLogged(
+    updatedDocument: PersistedGraphDocument,
+  ): Promise<void> {
     await this.graphsRepository.saveGraphDocument(updatedDocument);
     const graphId = updatedDocument.graph.id;
     await this.diagramStore.loadGraph(graphId);

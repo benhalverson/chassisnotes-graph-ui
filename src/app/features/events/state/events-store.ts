@@ -1,5 +1,11 @@
 import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
 import { EventsRepository } from '../../../core/db/repositories/events-repository';
 import { SessionsRepository } from '../../../core/db/repositories/sessions-repository';
 import type {
@@ -47,7 +53,8 @@ export const EventsStore = signalStore(
         try {
           const sessions = await sessionsRepository.listByGraph(graphId);
           const today = new Date().toISOString().slice(0, 10);
-          let session = sessions.find((s) => s.createdAt.startsWith(today)) ?? null;
+          let session =
+            sessions.find((s) => s.createdAt.startsWith(today)) ?? null;
           if (!session) {
             const timestamp = new Date().toISOString();
             session = {
@@ -60,11 +67,18 @@ export const EventsStore = signalStore(
             await sessionsRepository.put(session);
           }
           const events = await eventsRepository.listBySession(session.id);
-          patchState(store, { currentSession: session, events, loading: false });
+          patchState(store, {
+            currentSession: session,
+            events,
+            loading: false,
+          });
         } catch (error) {
           patchState(store, {
             loading: false,
-            error: error instanceof Error ? error.message : 'Failed to load session.',
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to load session.',
           });
         }
       },
@@ -110,6 +124,8 @@ export const EventsStore = signalStore(
 );
 
 function createId(prefix: string): string {
-  const randomValue = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const randomValue =
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   return `${prefix}-${randomValue}`;
 }
