@@ -6,6 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
 import type {
   GraphRecord,
   PersistedGraphDocument,
@@ -50,9 +51,11 @@ export class TodayPage {
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
       .slice(0, 3),
   );
-  protected readonly recentSessions = computed(() => this.recentSessionGraphs().slice(0, 3));
   protected readonly showQuickLogDialog = signal(false);
   protected readonly quickLogGraphId = signal<string | null>(null);
+  protected readonly recentSessions = computed(() =>
+    this.recentSessionGraphs().slice(0, 3),
+  );
 
   constructor() {
     void this.loadDashboard();
@@ -100,6 +103,9 @@ export class TodayPage {
   }
 
   private async openQuickLog(): Promise<void> {
+  private async navigateToQuickAdd(
+    nodeType: 'experiment' | 'symptom',
+  ): Promise<void> {
     const graphId = await this.ensureActiveGraphId();
 
     if (!graphId) {

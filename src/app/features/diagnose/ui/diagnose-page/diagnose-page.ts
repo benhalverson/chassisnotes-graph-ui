@@ -104,4 +104,9 @@ export class DiagnosePage {
   protected readonly suggestions = computed(
     () => SUGGESTIONS[this.selectedSymptom()],
   );
+  protected readonly symptomButtonClass = (symptomId: string): string =>
+    'rounded-2xl border px-4 py-3 text-left transition-colors ' +
+    (this.selectedSymptom() === symptomId
+      ? 'border-amber-400 bg-amber-500/10'
+      : 'border-slate-800 bg-slate-950/40');
 }

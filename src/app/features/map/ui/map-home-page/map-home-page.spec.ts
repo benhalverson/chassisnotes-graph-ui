@@ -1,6 +1,10 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter, convertToParamMap } from '@angular/router';
+import {
+  ActivatedRoute,
+  convertToParamMap,
+  provideRouter,
+} from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 

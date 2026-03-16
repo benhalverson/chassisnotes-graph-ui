@@ -19,7 +19,7 @@ export class PlaceholderPage {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly title = toSignal(
-    this.route.data.pipe(map((d) => (d.title as string) ?? '')),
+    this.route.data.pipe(map((d) => (d['title'] as string) ?? '')),
     { initialValue: '' },
   );
 }
