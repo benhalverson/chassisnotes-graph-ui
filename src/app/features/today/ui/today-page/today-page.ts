@@ -12,10 +12,12 @@ import type {
   PersistedGraphDocument,
   TemplateRecord,
 } from '../../../../core/models/graph.models';
+import { GraphsRepository } from '../../../../core/db/repositories/graphs-repository';
+import { QuickLogDialog } from '../../../events/ui/quick-log-dialog/quick-log-dialog';
 
 @Component({
   selector: 'app-today-page',
-  imports: [RouterLink],
+  imports: [RouterLink, QuickLogDialog],
   templateUrl: './today-page.html',
   styleUrl: './today-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,6 +51,8 @@ export class TodayPage {
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
       .slice(0, 3),
   );
+  protected readonly showQuickLogDialog = signal(false);
+  protected readonly quickLogGraphId = signal<string | null>(null);
   protected readonly recentSessions = computed(() =>
     this.recentSessionGraphs().slice(0, 3),
   );
@@ -72,11 +76,21 @@ export class TodayPage {
   }
 
   protected async recordSymptom(): Promise<void> {
-    await this.navigateToQuickAdd('symptom');
+    await this.openQuickLog();
   }
 
   protected async logChange(): Promise<void> {
-    await this.navigateToQuickAdd('experiment');
+    await this.openQuickLog();
+  }
+
+  protected closeQuickLog(): void {
+    this.showQuickLogDialog.set(false);
+  }
+
+  protected async onEventLogged(updatedDocument: PersistedGraphDocument): Promise<void> {
+    await this.graphsRepository.saveGraphDocument(updatedDocument);
+    this.activeDocument.set(updatedDocument);
+    await this.loadDashboard();
   }
 
   protected formatRelativeTime(updatedAt: string): string {
@@ -88,6 +102,7 @@ export class TodayPage {
     }).format(new Date(updatedAt));
   }
 
+  private async openQuickLog(): Promise<void> {
   private async navigateToQuickAdd(
     nodeType: 'experiment' | 'symptom',
   ): Promise<void> {
@@ -97,9 +112,8 @@ export class TodayPage {
       return;
     }
 
-    await this.router.navigate(['/map', graphId], {
-      queryParams: { quickAdd: nodeType },
-    });
+    this.quickLogGraphId.set(graphId);
+    this.showQuickLogDialog.set(true);
   }
 
   private async ensureActiveGraphId(): Promise<string | null> {

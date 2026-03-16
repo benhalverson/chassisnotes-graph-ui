@@ -4,6 +4,8 @@ import type {
   GraphEdgeRecord,
   GraphNodeRecord,
   GraphRecord,
+  RacingEventRecord,
+  SessionRecord,
   TemplateRecord,
 } from '../models/graph.models';
 
@@ -21,6 +23,8 @@ export class AppDb extends Dexie {
   readonly edges!: Table<GraphEdgeRecord, string>;
   readonly templates!: Table<TemplateRecord, string>;
   readonly preferences!: Table<AppPreferenceRecord, string>;
+  readonly sessions!: Table<SessionRecord, string>;
+  readonly events!: Table<RacingEventRecord, string>;
 
   constructor() {
     super('chassisnotes_relationships');
@@ -40,6 +44,17 @@ export class AppDb extends Dexie {
         'id, graphId, [graphId+relationshipType], [graphId+sourceNodeId], [graphId+targetNodeId]',
       templates: 'id, name, updatedAt',
       preferences: 'key',
+    });
+
+    this.version(3).stores({
+      graphs: 'id, updatedAt, [surface+classType], [chassis+classType]',
+      nodes: 'id, graphId, [graphId+type], [graphId+subtype]',
+      edges:
+        'id, graphId, [graphId+relationshipType], [graphId+sourceNodeId], [graphId+targetNodeId]',
+      templates: 'id, name, updatedAt',
+      preferences: 'key',
+      sessions: 'id, graphId, updatedAt',
+      events: 'id, sessionId, graphId, type',
     });
   }
 }

@@ -128,4 +128,12 @@
 			</section>
 		}
 	</section>
+
+	@if (showQuickLogDialog() && quickLogGraphId()) {
+		<app-quick-log-dialog
+			[graphId]="quickLogGraphId()!"
+			(closeRequested)="closeQuickLog()"
+			(eventLogged)="onEventLogged($event)"
+		/>
+	}
 </main>

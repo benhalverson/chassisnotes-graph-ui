@@ -193,3 +193,51 @@ export interface GraphExportPayload {
   nodes: GraphNodeRecord[];
   edges: GraphEdgeRecord[];
 }
+
+// Session record - groups a set of events
+export interface SessionRecord {
+  id: string;
+  graphId: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Event types
+export type RacingEventType = 'record-symptom' | 'log-setup-change' | 'record-result';
+
+// Event data payloads
+export interface RecordSymptomData {
+  symptom: string;
+  cornerPhase: GraphPhaseTag;
+  confidence: ConfidenceLevel;
+}
+
+export interface LogSetupChangeData {
+  component: string;
+  fromValue: string;
+  toValue: string;
+  reason: string;
+}
+
+export interface RecordResultData {
+  outcome: string;
+  effect: 'improved' | 'worsened' | 'no-change';
+  notes: string;
+}
+
+// Discriminated union for event data
+export type RacingEventData =
+  | ({ type: 'record-symptom' } & RecordSymptomData)
+  | ({ type: 'log-setup-change' } & LogSetupChangeData)
+  | ({ type: 'record-result' } & RecordResultData);
+
+// The persisted event record
+export interface RacingEventRecord {
+  id: string;
+  sessionId: string;
+  graphId: string;
+  type: RacingEventType;
+  data: RecordSymptomData | LogSetupChangeData | RecordResultData;
+  createdAt: string;
+}
